@@ -11,4 +11,7 @@ options :
 
 
 -browse [NOM_SERVEUR] [NOM_ARCHIVE]
+"Explorer sur le serveur l'archive [NOM_ARCHIVE] en entrant dans un mode shell vsh"
+Commandes : pwd, ls, cd, cat, rm
+Les commandes s'appliquent à l'archive (le fichier texte)
 
