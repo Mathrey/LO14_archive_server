@@ -1,0 +1,9 @@
+Serveur : programme qui contient les fonctions
+Client : programme qui demande à travers une connection au serveur (commande nc) d'exécuter les fonctions
+
+Commande vsh : 
+options :
+-list [NOM_SERVEUR] [PORT]
+Affiche la liste des archives présentes sur le serveur
+[NOM_SERVEUR] : adresse du serveur
+[PORT] : port sur lequel le serveur attend une requête
