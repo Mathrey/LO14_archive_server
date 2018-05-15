@@ -1,0 +1,63 @@
+Ctrl + D = exit
+Ctrl + L = affiche un terminal vide d'un saut de page
+Ctrl + A/E = ramène au début/à la fin
+Ctrl + U/K = supprime à gauche/droite du curseur
+Ctrl + W = supprime le mot à gauche
+Ctrl + shift + V = coller
+Ctrl + Y = coller ce qui vient d'être supprimé
+
+ls -a : affiche tous les fichiers et dossiers cachés
+ls -A : '' sauf . et ..
+ls -l : liste détaillée
+ls -lh : liste avec paramètres lisibles par un humain
+ls -t : liste triée par date de modification
+ls -r : renverse l'ordre d'affichage
+ls -i : affiche les inodes des fichiers (permet de vérifier la présence de liens physiques)
+
+cat -n : affiche le fichier en paramètre avec les numéros de ligne
+
+less : affiche le fichier en paramètre page par page
+-> espace : affiche la suite du fichier
+-> entrée/flèche du bas : affiche la ligne suivante
+-> d : affiche la moitié d'écran suivante
+-> b : retour d'un écran en arrière
+-> y : retour d'une ligne en arrière
+-> u : retour d'une moitié d'écran en arrière
+-> q : fin
+-> = : indique où on en est dans le fichier
+-> h : aide
+-> / + texte : recherche texte
+-> n : prochaine occurence de la recherche
+-> N : occurence précédente de la recherche
+
+head fichier : affiche le début d'un fichier
+head -n a fichier : affiche les a premières lignes du fichier 
+
+tail fichier : affiche la fin d'un fichier
+tail -n a fichier : affiche les a dernières lignes du fichier
+tail -f fichier : affiche la fin du fichier au fur et à mesure des modifications
+tail -f -s a fichier : affiche la fin du fichier mise à jour toutes les a secondes
+
+touch fichier/"fichier avec espaces" : crée un fichier/modifie la date de modification d'un fichier
+
+mkdir dossier/dossier1 dossier2 : crée un/des dossier(s)
+mkdir -p dossier/dansdossier : crée les dossiers intermédiaires
+
+cp fichier fichiercopie : copie fichier en fichiercopie
+cp fichier dossier/fichiercopie : copie fichier dans dossier en fichiercopie
+cp -R dossier dossiercopie : copie le dossier ainsi que tout ce qu'il contient
+
+mv fichier dossier/ : déplace fichier dans dossier
+mv fichier1 fichier2 : renomme fichier1 en fichier2
+mv fichier1 dossier/fichier2 : renomme fichier1 en fichier2 et le déplace dans dossier
+
+rm fichier : supprime fichier
+rm fichier1 fichier2 : supprime fichier1 et fichier2
+rm -i : demander confirmation
+rm -f : forcer la suppression
+rm -v : afficher chaque suppression
+rm -r : supprimer un dossier et tout son contenu
+
+ln fichier1 fichier2 : crée un lien physique (nom différent, même contenu) entre fichier1 et fichier2 (fichiers seulement)
+ln -s fichier1 fichier2 : crée un lien physique ( fichier2 pointe sur fichier1)
+
