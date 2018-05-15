@@ -61,3 +61,14 @@ rm -r : supprimer un dossier et tout son contenu
 ln fichier1 fichier2 : crée un lien physique (nom différent, même contenu) entre fichier1 et fichier2 (fichiers seulement)
 ln -s fichier1 fichier2 : crée un lien physique ( fichier2 pointe sur fichier1)
 
+Permissions on directories
+A directory with its x bit set allows the user to cd (change directory) into this directory, and access the files in it.
+Details on https://unix.stackexchange.com/questions/21251/execute-vs-read-bit-how-do-directory-permissions-in-linux-work
+– Read (r)
+The ability to read the names of files stored in this directory.
+– Write (w)
+The ability to rename files in the directory, create new files, or delete existing files, if you also have Execute permissions. If you don't have execute perms, then write perms are meaningless.
+– Execute (x)
+The ability to cd into this directory, and access the files in this directory.
+
+
