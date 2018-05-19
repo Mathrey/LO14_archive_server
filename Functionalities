@@ -10,7 +10,7 @@ options :
 [PORT] : port sur lequel le serveur attend une requête
 
 
--browse [NOM_SERVEUR] [NOM_ARCHIVE]
+-browse [NOM_SERVEUR] [PORT] [NOM_ARCHIVE]
 "Explorer sur le serveur l'archive [NOM_ARCHIVE] en entrant dans un mode shell vsh"
 Commandes : pwd, ls, cd, cat, rm
 Les commandes s'appliquent à l'archive (donc directement sur le fichier texte)
