@@ -1,1 +1,31 @@
 #!/bin/bash
+
+# Ce script va répondre à l'appel du serveur et renvoyer la fonction adéquate
+# Le script doit être invoqué avec list | extract | browse selon leur syntaxe
+
+read input
+
+case $input in 
+
+	list ) vsh_list
+		;;
+
+	extract ) vsh_extract
+		;;
+	
+	browse ) vsh_browse
+		;;
+	* ) echo "Sorry, use commands list OR extract OR browse"
+esac
+
+vsh_list () {
+
+}
+
+vsh_extract () {
+
+}
+
+vsh_browse () {
+	
+}
