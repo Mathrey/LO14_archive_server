@@ -25,7 +25,7 @@ echo -e "Port number : ${PORT}\n"
 if (echo $PORT | grep -E -q "^[0-9]+$")
 then
 	echo "Client is running..."
-	echo $input #| nc $SERVER_NAME $PORT
+	nc $SERVER_NAME $PORT < $input
 
 fi
 
