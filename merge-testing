@@ -1,5 +1,9 @@
 coucou
 
 if coucou
+	bonjour
+fi
+
+if coucou
 	au revoir
 fi
