@@ -5,7 +5,7 @@ Commande vsh :
 options :
 
 -list [NOM_SERVEUR] [PORT]
-"Affiche la liste des archives présentes sur le serveur"
+"Afficher la liste des archives présentes sur le serveur"
 [NOM_SERVEUR] : adresse du serveur
 [PORT] : port sur lequel le serveur attend une requête
 
@@ -13,5 +13,8 @@ options :
 -browse [NOM_SERVEUR] [NOM_ARCHIVE]
 "Explorer sur le serveur l'archive [NOM_ARCHIVE] en entrant dans un mode shell vsh"
 Commandes : pwd, ls, cd, cat, rm
-Les commandes s'appliquent à l'archive (le fichier texte)
+Les commandes s'appliquent à l'archive (donc directement sur le fichier texte)
+
+-extract [NOM_SERVEUR] [PORT] [NOM_ARCHIVE]
+"Créer les répertoires et fichier de l'archive [NOM_ARCHIVE] dans le répertoire courant de la machine cliente"
 
