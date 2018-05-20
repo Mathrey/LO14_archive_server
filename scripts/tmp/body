@@ -1,0 +1,21 @@
+#!/bin/bash
+
+echo "bonjour!" 
+NAME
+  ls - list directory contents
+  
+SYNOPSIS
+  ls [OPTION]... [FILE]...
+
+DESCRIPTION
+  List information about the FILEs. 
+DESCRIPTION
+  man formats and displays the on-line manual pages. 
+NAME
+  cat - concatenate files and print on the standard output
+
+SYNOPSIS
+  cat [OPTION] [FILE]...
+
+DESCRIPTION
+  Concatenate FILE(s), or standard input, to standard out- put.
