@@ -24,17 +24,19 @@ trap nettoyage EXIT
 [ -e "$FIFO" ] || mkfifo "$FIFO"
 
 # Fonction qui renvoie aux fonctions de vsh
-function interaction() {
-	local cmd args
-	while true; do
-		read cmd args || exit -1
-		if [ "$(type -t $cmd)" = "function" ]; then
-			$cmd $args
-		else
-			echo "Unknown command"
-		fi
-	done
-}
+# Ne marche pas, à revoir
+#function readinput() {
+#	local cmd args
+#	while true; do
+#		read cmd args || exit -1
+#		fun="commande-$cmd"
+#		if [ "$(type -t $fun)" = "function" ]; then
+#			$fun $args
+#		else
+#			echo "Unknown command"
+#		fi
+#	done
+#}
 
 function vsh() {
 	case $1 in
@@ -70,6 +72,7 @@ fi
 # Partie serveur
 while true; do
 	echo "waiting input"
-	interaction < "$FIFO" | nc -lp $1 > "$FIFO"
+# Écrit la réception dans le dossier FIFO
+#	nc -lp $1 > "$FIFO"
 	echo "input done !"
 done

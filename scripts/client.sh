@@ -14,6 +14,7 @@ echo -e "For a local server name should be localhost\n"
 
 
 read -p "Waiting for vsh input... " input
+echo $input > tmp/input.txt
 
 #MODE=$(echo $input | cut -d" " -f2)
 SERVER_NAME=$(echo $input | cut -d" " -f3)
@@ -25,8 +26,10 @@ echo -e "Port number : ${PORT}\n"
 if (echo $PORT | grep -E -q "^[0-9]+$")
 then
 	echo "Client is running..."
-	nc $SERVER_NAME $PORT < $input
-
+	nc $SERVER_NAME $PORT < tmp/input.txt
+	echo "toast"
+	cat tmp/input.txt
+	rm tmp/input.txt
 fi
 
 
