@@ -1,0 +1,30 @@
+#!/bin/bash
+
+echo "vsh:> "
+while read input
+do
+	case $input in
+		"pwd" )
+		echo "commande pwd"
+		;;
+
+		"ls" )
+		echo "commande ls"
+		;;
+
+		"cd" )
+		echo "commande cd"
+		;;
+
+		"cat" )
+		echo "commande cat"
+		;;
+
+		"rm" )
+		echo "commande rm"
+		;;
+
+		* )
+		echo "unknown command"
+	esac
+done
