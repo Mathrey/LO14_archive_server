@@ -27,4 +27,5 @@ do
 		* )
 		echo "unknown command"
 	esac
+	echo "pwd:> "
 done

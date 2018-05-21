@@ -45,8 +45,8 @@ function vsh() {
 		"-browse" )
 		echo "mode browse requested (but not yet functionnal)"
 		[ -e tmp/tube ] || mkfifo tmp/tube
-#		nc -lp $3 < tmp/tube | bash ./vsh-browse.sh args > tmp/tube
-		nc -lp $3 < tmp/tube | echo "browse mode not yet implemented" > tmp/tube
+		nc -lp $3 < tmp/tube | bash ./vsh-browse.sh args > tmp/tube
+#		nc -lp $3 < tmp/tube | echo "browse mode not yet implemented" > tmp/tube
 		rm tmp/tube
 		;;
 
