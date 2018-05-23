@@ -1,11 +1,17 @@
 #!/bin/bash
 
+currentArchive=$(cat ../archives/$4)
+currentDirectory=/
+
 echo "vsh:> "
 while read input
 do
-	case $input in
+	set -- $(echo $input)
+	echo $2
+	echo $#
+	case $1 in
 		"pwd" )
-		echo "commande pwd"
+		echo $currentDirectory
 		;;
 
 		"ls" )
@@ -27,5 +33,5 @@ do
 		* )
 		echo "unknown command"
 	esac
-	echo "pwd:> "
+	echo "vsh:> "
 done

@@ -27,7 +27,6 @@ PORT=$(echo $input | cut -d" " -f4)
 echo -e "Server name : ${SERVER_NAME}"
 echo -e "Port number : ${PORT}\n"
 
-
 if (echo $PORT | grep -E -q "^[0-9]+$")
 then
 	echo "Client is running..."
@@ -36,5 +35,6 @@ then
 	sleep 1s
 	nc $SERVER_NAME $PORT
 else
+	echo "Port incorrect"
 	usage
 fi
