@@ -63,20 +63,24 @@ function vsh_extract() {
 				then
 					echo ""
 					name=$(echo "$line" | cut -d " " -f 1) # On va affecter à des variables le nom et l'emplacement du contenu du fichier 
-						echo "$name"
+						echo "Traitement du fichier $name"
 					fdebut=$(echo "$line" | cut -d " " -f 4)
-						echo "$fdebut"
+						echo "Ligne de début dans tmp/body : $fdebut"
 					flength=$(echo "$line" | cut -d " " -f 5)
-						echo "$flength"
-					fend=$((fdebut+flength))
-						echo "$fend"
+						echo "Nombre de lignes dans tmp/body : $flength"
+					fend=$((fdebut+flength-1))
+						echo "Ligne de fin dans tmp/body : $fend"
 
-					echo ""
 					curdir=$(pwd) # On sauvegarde l'emplacement où l'on est pour y envoyer le fichier qui va être créé 
-					# cd $asroot
-					sed -n "$((fdebut)),$((fend))p" $dirtmp/body > $curdir/$name
-						echo "le fichier $name a été créé"
-					cd $curdir
+					
+					if [[ $flength -eq 0 ]]
+						then
+							touch $curdir/$name # Si la longueur du fichier vaut 0 on utilise "touch" car le "sed" a tendance à lui implémenter du contenu au vu à cause de la rédaction du code
+							echo "Le fichier $name a été créé. C'est un fichier vide."
+						else	
+							sed -n "$((fdebut)),$((fend))p" $dirtmp/body > $curdir/$name
+								echo "Le fichier $name a été créé"
+					fi
 
 			elif [[ "$line" =~ ^@ ]]
 				then
