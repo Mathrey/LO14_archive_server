@@ -6,10 +6,12 @@
 
 function vsh_extract() {
 	
-	cd ../archives
-	#functionaldir=pwd
+	cd tmp
+	dirtmp=$(pwd) # On stocke le chemin absolu vers le dossier tmp
+	cd ../../archives
 	read input # fichier correspondant à l'archive qui va être traitée, non nécessaire lorsque la fonction sera appelée par server
 	echo ""
+	asroot=$(pwd) # À changer par le répertoire du client ?
 
 ############################################################ 
 
@@ -31,40 +33,63 @@ function vsh_extract() {
 	bend=$(sed -n '$=' $input) # la variable bend donne la ligne où se termine le body de l'archive
 	echo ""
 
-	sed -n "$((hdebut)),$((hend))p" $input > ../scripts/tmp/header
-	sed -n "$((bdebut)),$((bend))p" $input > ../scripts/tmp/body
+	sed -n "$((hdebut)),$((hend))p" $input > $dirtmp/header
+	sed -n "$((bdebut)),$((bend))p" $input > $dirtmp/body
 
 	while read -r line
 		do 
-			if [[ "$line" =~ ^directory ]] # si la ligne commence par "directory", on va créer l'arborescence qui est détaillée dans la suite de la ligne
+			if [[ $(echo "$line" | egrep "^directory") ]] # si la ligne commence par "directory", on va créer l'arborescence qui est détaillée dans la suite de la ligne
 				then
 					if [[ ! -d  $(echo "$line" | cut -d " " -f 2) ]] # pour éviter la re-création d'un dossier plus tard dans l'archive (ce qui ferait perdre les attributions de permission)
 						then
 							mkdir -p $(echo "$line" | cut -d " " -f 2)
-							echo "L'arborescence $(echo "$line" | cut -d " " -f 2) a été créée" 
+							echo "L'arborescence $(echo "$line" | cut -d " " -f 2) a été créée"
+							cd $(echo "$line" | cut -d " " -f 2) # Il faut se placer dans le niveau d'aborescence créé pour pouvoir ensuite créer les fichiers et répertoires du niveau
+						else
+							echo "L'arborescence $(echo "$line" | cut -d " " -f 2) existe déjà" 
+							
+							cd $(echo "$line" | cut -d " " -f 2) # Il faut se placer dans le niveau d'aborescence créé pour pouvoir ensuite créer les fichiers et répertoires du niveau
 					fi
 
-			elif [[ "$line" =~ ^\w+\s+d ]] # si la ligne contient nom_dossier/espace/d => décrit un répertoire (permissions + taille)
+			# elif [[ "$line" =~ ^\w+\sd ]] # Cette version ne marche pas à cause de la gestion des regex par défaut de bash
+			
+			elif [[ $(echo "$line" | egrep "^\w+\sd") ]]  # si la ligne contient nom_dossier/espace/d => décrit un répertoire (permissions + taille)
 				then
 					mkdir -p $(echo "$line" | cut -d " " -f 1)
+					echo "Le répertoire $(echo "$line" | cut -d " " -f 1) a été créé"
 					# il faudra rajouter les changements de permissions
 
-			elif [[ "$line" =~ \d+\s+\d+\s+\d+$ ]] # si la ligne finit par 3 nb séparés par des espace => décrit un fichier (permissions + taille + emplacement dans body)
+			elif [[ $(echo "$line" | egrep "\d+\s\d+\s\d+$") ]] # si la ligne finit par 3 nb séparés par des espace => décrit un fichier (permissions + taille + emplacement dans body)
 				then
-					name=$(echo "$line" | cut -d " " -f 1)
-					echo "$name"
+					echo ""
+					name=$(echo "$line" | cut -d " " -f 1) # On va affecter à des variables le nom et l'emplacement du contenu du fichier 
+						echo "$name"
 					fdebut=$(echo "$line" | cut -d " " -f 4)
-					echo "$fdebut"
+						echo "$fdebut"
 					flength=$(echo "$line" | cut -d " " -f 5)
-					echo "flength"
+						echo "$flength"
 					fend=$((fdebut+flength))
-					echo "fend"
-					sed -n "$((fdebut)),$((fend))p" ../scripts/tmp/body > $name
-					echo "le fichier $name a été créé" 
+						echo "$fend"
+
+					echo ""
+					curdir=$(pwd) # On sauvegarde l'emplacement où l'on est pour y envoyer le fichier qui va être créé 
+					# cd $asroot
+					sed -n "$((fdebut)),$((fend))p" $dirtmp/body > $curdir/$name
+						echo "le fichier $name a été créé"
+					cd $curdir
+
+			elif [[ "$line" =~ ^@ ]]
+				then
+					cd $asroot
+					echo ""
+					echo "Retour au répertoire de départ"
+					echo $(pwd)
+					echo ""
+
 			else
 				echo "ÉCHEC" 
 			fi
-		done < ../scripts/tmp/header
+		done < $dirtmp/header
 
 
 }
