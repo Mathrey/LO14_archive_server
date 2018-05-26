@@ -20,14 +20,18 @@ while read input
 do
 	set -- $(echo $input)
 	case $1 in
+
+		# Affiche le dossier courant
 		"pwd" )
 		echo "$currentDirectory"
 		;;
 
+		# Affiche les fichiers et dossiers présents dans le dossier courant
 		"ls" )
-		echo "commande ls"
+		
 		;;
 
+		# Permet de changer de répertoire
 		"cd" )
 		path=$2
 
@@ -46,7 +50,6 @@ do
 			then
 				currentDirectory=$(echo "$path")
 			else
-				echo "$path"
 				echo "No directory found"
 			fi
 		# Chemin relatif
@@ -54,6 +57,18 @@ do
 			if [ -z "$path" ]
 			then
 				currentDirectory=/
+			elif [ "$path" = ".." ]
+			then
+				if [ "$currentDirectory" = "/" ]
+				then
+					currentDirectory=/
+				else
+					currentDirectory=$(echo "$currentDirectory" | egrep -o ".*/")
+					if [ "$currentDirectory" != "/" ]
+					then
+						currentDirectory=$(echo "$currentDirectory" | sed 's/\/$//')
+					fi
+				fi
 			else
 				if [ "$currentDirectory" = "/" ]
 				then
@@ -88,3 +103,4 @@ do
 	esac
 	echo -n "vsh:> "
 done
+
