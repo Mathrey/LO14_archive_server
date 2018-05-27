@@ -20,7 +20,7 @@ function deleteDirectory() {
 	#for i in directoryContent
 	#if i is type directory
 	# iName=$(echo "$i" | cut -d" " -f1)
-	# iPath=$(echo "$toDeletePath/$iName)
+	# iPath=$(echo "$toDeletePath/$iName")
 	#then deleteDirectory iPath iName
 	#elsif i is type file; delete i
 	#done
