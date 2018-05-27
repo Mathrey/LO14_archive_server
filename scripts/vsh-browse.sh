@@ -10,7 +10,9 @@ fi
 
 # Variables locales
 currentArchive=$(cat ../archives/$4)
+# currentDirectory ne doit jamais finir par "/" sauf lorsqu'on est à la racine
 currentDirectory=/
+# Pour l'archive exemple, root a la valeur : Exemple/Test
 root=$(echo "$currentArchive" | head -n 3 | tail -n 1 | cut -d" " -f2 | sed 's/\/$//') #Récupère la racine de l'archive
 
 echo -n "vsh:> "
@@ -95,12 +97,15 @@ do
 				# Si on est déjà à la racine
 				if [ "$currentDirectory" = "/" ]
 				then
+					# On reste à la racine
 					currentDirectory=/
 				else
+					# On revient au dossier précédent grâce au chemin
 					currentDirectory=$(echo "$currentDirectory" | egrep -o ".*/")
 					# Si on n'est pas revenu à la racine on retire le "/" de fin
 					if [ "$currentDirectory" != "/" ]
 					then
+						# On enlève le "/" à la fin pour rester cohérent
 						currentDirectory=$(echo "$currentDirectory" | sed 's/\/$//')
 					fi
 				fi
@@ -111,7 +116,7 @@ do
 				if [ "$currentDirectory" = "/" ]
 				then
 					# Si le chemin est présent dans l'archive
-					if (echo "$currentArchive" | egrep -q "$root$currentDirectory$path")
+					if (echo "$currentArchive" | egrep -q "$root$currentDirectory$path ?$")
 					then
 						# Pas besoin de rajouter un "/" entre l'origine et la destination
 						currentDirectory=$(echo "$currentDirectory$path")
@@ -121,7 +126,7 @@ do
 				# Si on est ailleurs qu'à la racine
 				else
 					# Si le chemin est présent dans l'archive
-					if (echo "$currentArchive" | egrep -q "$root$currentDirectory/$path")
+					if (echo "$currentArchive" | egrep -q "$root$currentDirectory/$path ?$")
 					then
 						# On ajoute le "/" entre l'origine et la destination
 						currentDirectory=$(echo "$currentDirectory/$path")
@@ -137,8 +142,68 @@ do
 		echo "commande cat"
 		;;
 
+		# Supprime un fichier/dossier
 		"rm" )
-		echo "commande rm"
+		toDelete=$2
+
+		if [ -n "$toDelete" ]
+		then
+			# On retire le possible "/" à la fin d'un chemin (sauf si c'est la racine)
+
+			if (echo "$toDelete" | egrep -q ".+/$")
+			then
+				toDelete=$(echo "$toDelete" | sed 's/.$//')
+	                fi
+
+			# On regarde si l'entité à supprimer existe et est un fichier ou un dossier
+			# Chemin absolu
+			if (echo "$toDelete" | egrep -q "^/")
+			then
+				# Si l'entité est la racine
+				if [ "$toDelete" = "/" ]
+				then
+					echo "Are you sure you want to delete everything ? y/n"
+					read response
+					case $response in
+
+						[yYoO]*)
+						currentArchive=''
+						;;
+
+						[nN]*)
+						echo "Deletion aborted"
+						;;
+
+						*)
+						echo "Incorrect response"
+					esac
+				# Si l'entité est un dossier
+				elif (echo "$currentArchive" | egrep "^directory $root$path ?$")
+				then
+					echo "Directory found"
+				# Si l'entité est un fichier
+				elif (echo "$currentArchive" | egrep "^$toDelete")
+				then
+					echo "Fichier trouvé"
+				fi
+
+			# Chemin relatif
+			else
+				echo "Chemin relatif"
+				# On souhaite supprimer dans un dossier fils
+#				if (echo "$toDelete" | egrep -q "/")
+#				then
+
+				# On souhaite supprimer dans le dossier courant
+#				else
+
+#				fi
+
+			fi
+
+		else
+			echo "No file to delete"
+		fi
 		;;
 
 		* )
@@ -146,4 +211,3 @@ do
 	esac
 	echo -n "vsh:> "
 done
-
