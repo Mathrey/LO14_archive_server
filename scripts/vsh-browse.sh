@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#gérer la suppression récursive de dossiers avec la fonction deleteDirectory():
+
 # Ferme le client si l'utilisateur a oublié de mettre l'archive
 if [ -z $4 ]
 then
@@ -7,6 +9,32 @@ then
 	echo "Usage : vsh -browse [SERVER_NAME] [PORT] [ARCHIVE_NAME]"
 	exit 1
 fi
+
+function deleteDirectory() {
+
+	echo "Fichier dans un fichier"
+	echo "$1"
+	##############
+	#args : $1=$toDeletePath (A; A/A1; ...) $2=$toDeleteName (A; A1; ...)
+	# toDeleteContent=$(echo "$currentArchive" | awk -v directory="$root/$toDeletePath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+	#for i in directoryContent
+	#if i is type directory
+	# iName=$(echo "$i" | cut -d" " -f1)
+	# iPath=$(echo "$toDeletePath/$iName)
+	#then deleteDirectory iPath iName
+	#elsif i is type file; delete i
+	#done
+	#delete toDelete
+	##############
+#lorsque l'on veut supprimer un dossier, lancer la fonction avec le chemin du dossier et son nom
+#dans la fonction :
+#----pour tout le contenu du dossier :
+#--------si dossier, on lance la fonction, le dossier et son contenu est supprimé
+#--------si fichier, on supprime
+#----supprimer le dossier
+#le dossier et son contenu on été supprimé
+	
+}
 
 # Variables locales
 currentArchive=$(cat ../archives/$4)
@@ -32,18 +60,18 @@ do
 		"ls" )
 
 		# Récupérer la ligne dans le header correspondant au fichier courant ainsi que les lignes suivantes jusqu'au prochain @
-		inDirectory=$(echo "$currentArchive" | awk -v directory="$root$currentDirectory" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+		directoryContent=$(echo "$currentArchive" | awk -v directory="$root$currentDirectory" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
 
 		# On sauvegarde IFS et on le change pour la boucle for
 		oldIFS=$IFS
 		IFS=$'\n'
 
 		# Pour chaque ligne dans le dossier courant, on affiche le nom, / à la fin si dossier, * à la fin si exécutable
-		for i in $inDirectory
+		for i in $directoryContent
 		do
 			name=$(echo "$i" | cut -d" " -f1)
 			perm=$(echo "$i" | cut -d" " -f2)
-			# On vérifie s'il les permissions commence par un d
+			# On vérifie s'il les permissions commencent par un d
 			if (echo "$perm" | egrep -q "^d")
 			then
 				echo -ne "$name/\t"
@@ -177,16 +205,29 @@ do
 						*)
 						echo "Incorrect response"
 					esac
-				# Si l'entité est un dossier
-				elif (echo "$currentArchive" | egrep "^directory $root$path ?$")
-				then
-					echo "Directory found"
-				# Si l'entité est un fichier
-				elif (echo "$currentArchive" | egrep "^$toDelete")
-				then
-					echo "Fichier trouvé"
-				fi
+				else
+					# On récupère le chemin de l'entité à supprimer (-o donne les résultats sur plusieurs lignes donc on utilise tr pour convertir les retours chariots en "/") sous la forme A/A1 ou A
+					toDeletePath=$(echo "$toDelete" | egrep -o "[[:alnum:]]+" | tr '\n' '/' | sed 's/\/$//')
+					echo "$toDeletePath"
+					# On recupére le nom de l'entité à supprimer
+					toDeleteName=$(echo "$toDelete" | egrep -o "[[:alnum:]]+$")
+					echo "$toDeleteName"
 
+					# On vérifie que le chemin existe : l'entité est un dossier
+					if (echo "$currentArchive" | egrep "^directory $root/$toDeletePath ?$")
+					then
+						echo "Directory found"
+						toDeleteContent=$(echo "$currentArchive" | awk -v directory="$root/$toDeletePath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+						echo "In this directory :"
+						echo "$toDeleteContent"
+					# On vérifie que le nom existe et que les permissions ne commencent pas par d : l'entité est un fichier
+					elif (echo "$currentArchive" | egrep "^$toDeleteName [^d]")
+					then
+						echo "Fichier trouvé"
+					else
+						echo "No directory or file found"
+					fi
+				fi
 			# Chemin relatif
 			else
 				echo "Chemin relatif"
@@ -200,6 +241,7 @@ do
 #				fi
 
 			fi
+			#deleteDirectory $toDelete
 
 		else
 			echo "No file to delete"
