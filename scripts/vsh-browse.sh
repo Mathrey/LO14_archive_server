@@ -28,7 +28,34 @@ do
 
 		# Affiche les fichiers et dossiers présents dans le dossier courant
 		"ls" )
-		
+
+		# Récupérer la ligne dans le header correspondant au fichier courant ainsi que les lignes suivantes jusqu'au prochain @
+		inDirectory=$(echo "$currentArchive" | awk -v directory="$root$currentDirectory" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+
+		# On sauvegarde IFS et on le change pour la boucle for
+		oldIFS=$IFS
+		IFS=$'\n'
+
+		# Pour chaque ligne dans le dossier courant, on affiche le nom, / à la fin si dossier, * à la fin si exécutable
+		for i in $inDirectory
+		do
+			name=$(echo "$i" | cut -d" " -f1)
+			perm=$(echo "$i" | cut -d" " -f2)
+			# On vérifie s'il les permissions commence par un d
+			if (echo "$perm" | egrep -q "^d")
+			then
+				echo -ne "$name/\t"
+			# Sinon on vérifie s'il y a un x dans les permissions
+			elif (echo "$perm" | egrep -q "x")
+			then
+				echo -ne "$name*\t"
+			else
+				echo -ne "$name\t"
+			fi
+		done
+		echo ""
+		# Restauration de IFS
+		IFS=$oldIFS
 		;;
 
 		# Permet de changer de répertoire
@@ -48,7 +75,9 @@ do
 			# On vérifie que le chemin est présent dans l'archive
 			# BUG : il y a un bug lorsque l'on rajoute "$" à la fin de la régex, tous les dossiers sont trouvés sauf /A/A2 et /A/A3, le grep récupère donc tous les résultats où le chemin apparaît (ce qui ne gêne pas puisqu'on veut juste vérifier qu'il existe)
 			# FIX : enlever le $ à la fin de la régex
-			if (echo "$currentArchive" | egrep -q "^directory $root$path")
+			# UPDATE : il y a un espace après A/A2 et A/A3
+			# FIX : ajouter " ?$" à la fin de la régex pour gérer la présence d'un possible espace
+			if (echo "$currentArchive" | egrep -q "^directory $root$path ?$")
 			then
 				currentDirectory=$(echo "$path")
 			else
