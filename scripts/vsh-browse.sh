@@ -261,20 +261,73 @@ do
 				then
 					echo "Child directory"
 					# On récupère le chemin de l'entité à supprimer
+					if [ "$currentDirectory" = "/" ]
+					then
+						toDeletePath=$(echo "$toDelete" | sed -r 's/(\/[^\/]+)$//')
+					else
+						toDeletePath=$(echo "/$toDelete" | sed -r 's/(\/[^\/]+)$//')
+					fi
+
+					echo "path = $toDeletePath"
+					# On recupére le nom de l'entité à supprimer
+					toDeleteName=$(echo "$toDelete" | egrep -o "[[:alnum:]]+$")
+					echo "name of file = $toDeleteName"
+
+					# On regarde si le chemin existe
+					if (echo "$currentArchive" | egrep "^directory $root$currentDirectory/?$toDeletePath ?$")
+					# On regarde si le fichier/dossier est dans le contenu du dossier	
+					then
+						echo "$toDeletePath existe dans $currentDirectory"
+						
+						currentContent=$(echo "$currentArchive" | awk -v directory="$root$currentDirectory$toDeletePath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+						# On regarde si l'entité existe dans le contenu de ce chemin et est un fichier
+						if (echo "$currentContent" | egrep "^$toDeleteName [^d]")
+						then
+							echo "$toDeleteName est bien un fichier dans $currentDirectory$toDeletePath"
+						# On regarde si l'entité existe dans le contenu de ce chemin et est un dossier
+						elif (echo "$currentContent" | egrep "^$toDeleteName [d]")
+						then
+							echo "$toDeleteName est bien un dossier dans $currentDirectory$toDeletePath"
+						else
+							echo "No file or directory found there"
+						fi
+					else
+						echo "No such path found"
+						echo "$root$currentDirectory/?$toDeletePath"
+					fi
 
 				# On souhaite supprimer dans le dossier courant
 				else
+					toDeleteName=$(echo "$toDelete" | egrep -o "[[:alnum:]]+$")
+					echo "name of file = $toDeleteName"
+
 					# On liste le contenu du dossier courant
 					currentContent=$(echo "$currentArchive" | awk -v directory="$root$currentDirectory" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+					echo "found in $root$currentDirectory with these :"
+					echo "$currentContent"
+
+					if [ "$currentDirectory" = "/" ]
+					then
+						toDeletePath=$(echo "$toDelete" | sed -r 's/(\/[^\/]+)$//')
+					else
+						# BUG : toDeletePath ne prend pas la valeur lorsque que l'on rajoute le sed
+						# FIX : Faire en deux fois de sorte à ne pas se faire piéger par l'expression linéaire qui renvoie tout ce qu'il y a avant le dernier "/" (donc rien si le seul "/" est le premier caractère)
+						toDeletePath=$(echo "$toDelete" | sed -r 's/(\/[^\/]+)$//')
+						toDeletePath=$(echo "/$toDeletePath")
+					fi
+
 					# On vérifie que l'entité existe et est un dossier
-					if (echo "$currentContent" | egrep "^$toDelete d")
+					if (echo "$currentContent" | egrep -q "^$toDeleteName d")
 					then
 						echo "Directory found"
-						toDeleteContent=$(echo "$currentArchive" | awk -v directory="$root/$toDeletePath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+						toDeleteContent=$(echo "$currentArchive" | awk -v directory="$root$currentDirectory$toDeletePath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+						echo "$root$currentDirectory$toDeletePath"
 						echo "In this directory :"
 						echo "$toDeleteContent"
+						# BUG : ne liste pas le bon contenu du dossier à supprimer lorsque l'on n'est pas à la racine (liste le dossier courant à la place)
+						# FIX : gérer le cas où l'on est à la racine pour la variable $toDeletePath
+
 					# On vérifie que le nom existe dans le dossier courant et que les permissions ne commencent pas par d : l'entité est un fichier
-# BUG : On trouve tous les fichiers avec le même nom
 					elif (echo "$currentContent" | egrep "^$toDelete [^d]")
 					then
 						echo "$toDelete found"
