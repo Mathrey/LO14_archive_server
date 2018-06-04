@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #gérer la suppression récursive de dossiers avec la fonction deleteDirectory():
+#pour supprimer : currentArchive=$(echo "$currentArchive" | grep -v "$contentToDelete")
 
 # Ferme le client si l'utilisateur a oublié de mettre l'archive
 if [ -z $4 ]
@@ -42,6 +43,8 @@ currentArchive=$(cat ../archives/$4)
 currentDirectory=/
 # Pour l'archive exemple, root a la valeur : Exemple/Test
 root=$(echo "$currentArchive" | head -n 3 | tail -n 1 | cut -d" " -f2 | sed 's/\/$//') #Récupère la racine de l'archive
+headBegin=$(echo "$currentArchive" | head -n 1 | cut -d":" -f1)
+bodyBegin=$(echo "$currentArchive" | head -n 1 | cut -d":" -f2)
 
 echo -n "vsh:> "
 # Tant que l'utilisateur ne quitte pas le programme
@@ -177,7 +180,6 @@ do
 		if [ -n "$toDelete" ]
 		then
 			# On retire le possible "/" à la fin d'un chemin (sauf si c'est la racine)
-
 			if (echo "$toDelete" | egrep -q ".+/$")
 			then
 				toDelete=$(echo "$toDelete" | sed 's/.$//')
@@ -220,10 +222,31 @@ do
 						toDeleteContent=$(echo "$currentArchive" | awk -v directory="$root/$toDeletePath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
 						echo "In this directory :"
 						echo "$toDeleteContent"
-					# On vérifie que le nom existe et que les permissions ne commencent pas par d : l'entité est un fichier
+					# On vérifie que le nom existe dans et que les permissions ne commencent pas par d : l'entité est un fichier
+# BUG : On trouve tous les fichiers avec le même nom
 					elif (echo "$currentArchive" | egrep "^$toDeleteName [^d]")
 					then
-						echo "Fichier trouvé"
+						echo "$toDeleteName found"
+						# Récupération du contenu du fichier
+						toDeleteFile=$(echo "$currentArchive" | egrep "^$toDeleteName [^d]")
+						echo "in archive $toDeleteFile"
+						# Récupération ligne de début du contenu
+						toDeleteBegin=$(echo "$toDeleteFile" | cut -d" " -f4)
+						echo "begin at $toDeleteBegin"
+						toDeleteBegin=$((toDeleteBegin+bodyBegin-1))
+						echo "in archive begins at $toDeleteBegin"
+						# Récupération longueur
+						toDeleteLength=$(echo "$toDeleteFile" | cut -d" " -f5)
+						echo "$toDeleteLength line(s) long"
+						# Calcul ligne de fin
+						toDeleteEnd=$((toDeleteBegin+toDeleteLength-1))
+						echo "end at $toDeleteEnd"
+						# Suppression fichier (headder)
+						currentArchive=$(echo "$currentArchive" | sed "s/${toDeleteFile}//")
+						# Suppression fichier (body)
+						currentArchive=$(echo "$currentArchive" | sed "${toDeleteBegin},${toDeleteEnd}s/.*//")
+						echo "File deleted"
+						echo "$currentArchive"
 					else
 						echo "No directory or file found"
 					fi
