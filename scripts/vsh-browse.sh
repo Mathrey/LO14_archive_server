@@ -1,7 +1,6 @@
 #!/bin/bash
 
 #gérer la suppression récursive de dossiers avec la fonction deleteDirectory():
-#pour supprimer : currentArchive=$(echo "$currentArchive" | grep -v "$contentToDelete")
 
 # Ferme le client si l'utilisateur a oublié de mettre l'archive
 if [ -z $4 ]
@@ -185,7 +184,6 @@ do
 				toDelete=$(echo "$toDelete" | sed 's/.$//')
 	                fi
 
-			# On regarde si l'entité à supprimer existe et est un fichier ou un dossier
 			# Chemin absolu
 			if (echo "$toDelete" | egrep -q "^/")
 			then
@@ -211,6 +209,7 @@ do
 					# On récupère le chemin de l'entité à supprimer (-o donne les résultats sur plusieurs lignes donc on utilise tr pour convertir les retours chariots en "/") sous la forme A/A1 ou A
 					toDeletePath=$(echo "$toDelete" | egrep -o "[[:alnum:]]+" | tr '\n' '/' | sed 's/\/$//')
 					echo "$toDeletePath"
+
 					# On recupére le nom de l'entité à supprimer
 					toDeleteName=$(echo "$toDelete" | egrep -o "[[:alnum:]]+$")
 					echo "$toDeleteName"
@@ -223,7 +222,7 @@ do
 						echo "In this directory :"
 						echo "$toDeleteContent"
 					# On vérifie que le nom existe et que les permissions ne commencent pas par d : l'entité est un fichier
-# BUG : On trouve tous les fichiers avec le même nom; parser le toDeleteContent avec toDeleteContent=$(echo "$currentArchive" | awk -v directory="$root/$toDeletePath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+					# BUG : On trouve tous les fichiers avec le même nom; parser le toDeleteContent avec toDeleteContent=$(echo "$currentArchive" | awk -v directory="$root/$toDeletePath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
 					elif (echo "$currentArchive" | egrep "^$toDeleteName [^d]")
 					then
 						echo "$toDeleteName found"
@@ -255,7 +254,7 @@ do
 			else
 				echo "Chemin relatif"
 				echo "$currentDirectory"
-				# Récupérer le nom du dossier ou fichier à supprimer
+				
 				if (echo "$toDelete" | egrep -q "/")
 				# On souhaite supprimer dans un dossier fils
 				then
@@ -345,7 +344,7 @@ do
 						# Calcul ligne de fin
 						toDeleteEnd=$((toDeleteBegin+toDeleteLength-1))
 						echo "end at $toDeleteEnd"
-						# Suppression fichier (headder)
+						# Suppression fichier (header)
 						currentArchive=$(echo "$currentArchive" | sed "s/${toDeleteFile}//")
 						# Suppression fichier (body)
 						currentArchive=$(echo "$currentArchive" | sed "${toDeleteBegin},${toDeleteEnd}s/.*//")
