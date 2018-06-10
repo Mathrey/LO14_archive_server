@@ -283,6 +283,28 @@ do
 						if (echo "$currentContent" | egrep "^$toDeleteName [^d]")
 						then
 							echo "$toDeleteName est bien un fichier dans $currentDirectory$toDeletePath"
+							# On supprime le fichier
+							# Récupération du contenu du fichier
+							toDeleteFile=$(echo "$currentContent" | egrep "^$toDeleteName [^d]")
+							echo "in archive $toDeleteFile"
+							# Récupération ligne de début du contenu
+							toDeleteBegin=$(echo "$toDeleteFile" | cut -d" " -f4)
+							echo "begin at $toDeleteBegin"
+							toDeleteBegin=$((toDeleteBegin+bodyBegin-1))
+							echo "in archive begins at $toDeleteBegin"
+							# Récupération longueur
+							toDeleteLength=$(echo "$toDeleteFile" | cut -d" " -f5)
+							echo "$toDeleteLength line(s) long"
+							# Calcul ligne de fin
+							toDeleteEnd=$((toDeleteBegin+toDeleteLength-1))
+							echo "end at $toDeleteEnd"
+							# Suppression fichier (header)
+							currentArchive=$(echo "$currentArchive" | sed "s/${toDeleteFile}//")
+							# Suppression fichier (body)
+							currentArchive=$(echo "$currentArchive" | sed "${toDeleteBegin},${toDeleteEnd}s/.*//")
+							echo "File deleted"
+							echo  "$currentArchive"
+########################################################
 						# On regarde si l'entité existe dans le contenu de ce chemin et est un dossier
 						elif (echo "$currentContent" | egrep "^$toDeleteName [d]")
 						then
@@ -349,7 +371,7 @@ do
 						# Suppression fichier (body)
 						currentArchive=$(echo "$currentArchive" | sed "${toDeleteBegin},${toDeleteEnd}s/.*//")
 						echo "File deleted"
-						echo "$currentArchive"
+						#echo "$currentArchive"
 					else
 						echo "No directory or file found"
 						
