@@ -40,24 +40,30 @@ function vsh_extract() {
 		do 
 			if [[ $(echo "$line" | egrep "^directory") ]] # si la ligne commence par "directory", on va créer l'arborescence qui est détaillée dans la suite de la ligne
 				then
-					if [[ ! -d  $(echo "$line" | cut -d " " -f 2) ]] # pour éviter la re-création d'un dossier plus tard dans l'archive (ce qui ferait perdre les attributions de permission)
+					arborescence=$(echo "$line" | cut -d " " -f 2)
+					if [[ ! -d  $arborescence ]] # pour éviter la re-création d'un dossier plus tard dans l'archive (ce qui ferait perdre les attributions de permission)
 						then
-							mkdir -p $(echo "$line" | cut -d " " -f 2)
-							echo "L'arborescence $(echo "$line" | cut -d " " -f 2) a été créée"
-							cd $(echo "$line" | cut -d " " -f 2) # Il faut se placer dans le niveau d'aborescence créé pour pouvoir ensuite créer les fichiers et répertoires du niveau
+							mkdir -p $arborescence
+							echo "L'arborescence $arborescence a été créée"
+							cd $arborescence # Il faut se placer dans le niveau d'aborescence créé pour pouvoir ensuite créer les fichiers et répertoires du niveau
 						else
-							echo "L'arborescence $(echo "$line" | cut -d " " -f 2) existe déjà" 
-							
-							cd $(echo "$line" | cut -d " " -f 2) # Il faut se placer dans le niveau d'aborescence créé pour pouvoir ensuite créer les fichiers et répertoires du niveau
+							echo "L'arborescence $arborescence existe déjà" 					
+							cd $arborescence # Il faut se placer dans le niveau d'aborescence créé pour pouvoir ensuite créer les fichiers et répertoires du niveau
 					fi
 
 			# elif [[ "$line" =~ ^\w+\sd ]] # Cette version ne marche pas à cause de la gestion des regex par défaut de bash
 			
 			elif [[ $(echo "$line" | egrep "^\w+\sd") ]]  # si la ligne contient nom_dossier/espace/d => décrit un répertoire (permissions + taille)
 				then
-					mkdir -p $(echo "$line" | cut -d " " -f 1)
-					echo "Le répertoire $(echo "$line" | cut -d " " -f 1) a été créé"
-					# il faudra rajouter les changements de permissions
+					dossier=$(echo "$line" | cut -d " " -f 1)
+					if [[ ! -d $dossier ]]
+						then
+							mkdir -p $dossier
+							echo "Le répertoire $dossier a été créé"
+							# il faudra rajouter les changements de permissions
+						else
+							echo "Le répertoire $dossier existe déjà" 
+					fi
 
 			elif [[ $(echo "$line" | egrep "\d+\s\d+\s\d+$") ]] # si la ligne finit par 3 nb séparés par des espace => décrit un fichier (permissions + taille + emplacement dans body)
 				then
@@ -73,13 +79,18 @@ function vsh_extract() {
 
 					curdir=$(pwd) # On sauvegarde l'emplacement où l'on est pour y envoyer le fichier qui va être créé 
 					
-					if [[ $flength -eq 0 ]]
+					if [[ ! -f $name ]]
 						then
-							touch $curdir/$name # Si la longueur du fichier vaut 0 on utilise "touch" car le "sed" a tendance à lui implémenter du contenu au vu à cause de la rédaction du code
-							echo "Le fichier $name a été créé. C'est un fichier vide."
-						else	
-							sed -n "$((fdebut)),$((fend))p" $dirtmp/body > $curdir/$name
-								echo "Le fichier $name a été créé"
+							if [[ $flength -eq 0 ]]
+								then
+									touch $curdir/$name # Si la longueur du fichier vaut 0 on utilise "touch" car le "sed" a tendance à lui implémenter du contenu au vu à cause de la rédaction du code
+									echo "Le fichier $name a été créé. C'est un fichier vide."
+								else	
+									sed -n "$((fdebut)),$((fend))p" $dirtmp/body > $curdir/$name
+										echo "Le fichier $name a été créé"
+							fi
+						else
+							echo "Le fichier $name existe déjà" 
 					fi
 
 			elif [[ "$line" =~ ^@ ]]
