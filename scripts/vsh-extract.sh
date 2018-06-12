@@ -27,10 +27,14 @@ function vsh_extract() {
 
 ############################################################
 	
-	hdebut=$(sed '1q' $input | cut -d : -f 1) # la variable hdebut donne la ligne où commence le header de l'archive
-	bdebut=$(sed '1q' $input | cut -d : -f 2) # la variable bdebut donne la ligne où commence le body de l'archive
-	hend=$(($bdebut-1)) # la variable hend donne la ligne où se termine le header de l'archive
-	bend=$(sed -n '$=' $input) # la variable bend donne la ligne où se termine le body de l'archive
+	# la variable hdebut donne la ligne où commence le header de l'archive
+	hdebut=$(sed '1q' $input | cut -d : -f 1) 
+	# la variable bdebut donne la ligne où commence le body de l'archive
+	bdebut=$(sed '1q' $input | cut -d : -f 2) 
+	# la variable hend donne la ligne où se termine le header de l'archive
+	hend=$(($bdebut-1)) 
+	# la variable bend donne la ligne où se termine le body de l'archive
+	bend=$(sed -n '$=' $input) 
 	echo ""
 
 	sed -n "$((hdebut)),$((hend))p" $input > $dirtmp/header
@@ -38,59 +42,100 @@ function vsh_extract() {
 
 	while read -r line
 		do 
-			if [[ $(echo "$line" | egrep "^directory") ]] # si la ligne commence par "directory", on va créer l'arborescence qui est détaillée dans la suite de la ligne
+			# si la ligne commence par "directory", on va créer l'arborescence qui est détaillée dans la suite de la ligne
+			if [[ $(echo "$line" | egrep "^directory") ]] 
 				then
 					arborescence=$(echo "$line" | cut -d " " -f 2)
-					if [[ ! -d  $arborescence ]] # pour éviter la re-création d'un dossier plus tard dans l'archive (ce qui ferait perdre les attributions de permission)
+					# pour éviter la re-création d'un dossier plus tard dans l'archive (ce qui ferait perdre les attributions de permission)
+					if [[ ! -d  $arborescence ]] 
 						then
 							mkdir -p $arborescence
 							echo "L'arborescence $arborescence a été créée"
-							cd $arborescence # Il faut se placer dans le niveau d'aborescence créé pour pouvoir ensuite créer les fichiers et répertoires du niveau
+							# Il faut se placer dans le niveau d'aborescence créé pour pouvoir ensuite créer les fichiers et répertoires du niveau
+							cd $arborescence 
 						else
 							echo "L'arborescence $arborescence existe déjà" 					
-							cd $arborescence # Il faut se placer dans le niveau d'aborescence créé pour pouvoir ensuite créer les fichiers et répertoires du niveau
+							# Il faut se placer dans le niveau d'aborescence créé pour pouvoir ensuite créer les fichiers et répertoires du niveau
+							cd $arborescence 
 					fi
 
 			# elif [[ "$line" =~ ^\w+\sd ]] # Cette version ne marche pas à cause de la gestion des regex par défaut de bash
 			
-			elif [[ $(echo "$line" | egrep "^\w+\sd") ]]  # si la ligne contient nom_dossier/espace/d => décrit un répertoire (permissions + taille)
+			# si la ligne contient nom_dossier/espace/d => décrit un répertoire (permissions + taille)
+			elif [[ $(echo "$line" | egrep "^\w+\sd") ]]  
 				then
-					dossier=$(echo "$line" | cut -d " " -f 1)
-					if [[ ! -d $dossier ]]
+					# On récupère le nom du dossier :
+					namedir=$(echo "$line" | cut -d " " -f 1)
+					
+					# On récupère les permissions à affecter au dossier :
+					dirperm=$(echo "$line" | cut -d " " -f 2)
+					dirpermu=$(echo "$line" | cut -d " " -f 2 | sed -e "s/^d\(...\)......$/\1/" | sed -e "s/-//g")
+					dirpermg=$(echo "$line" | cut -d " " -f 2 | sed -e "s/^d...\(...\)...$/\1/" | sed -e "s/-//g")
+					dirpermo=$(echo "$line" | cut -d " " -f 2 | sed -e "s/^d......\(...\)$/\1/" | sed -e "s/-//g")
+					
+					if [[ ! -d $namedir ]]
 						then
-							mkdir -p $dossier
-							echo "Le répertoire $dossier a été créé"
-							# il faudra rajouter les changements de permissions
+							# On crée le répertoire
+							mkdir -p $namedir
+							echo "Le répertoire $namedir a été créé"
+							
+							# On attribue les permissions du répertoire
+							chmod 000 $namedir
+							chmod u+$dirpermu,g+$dirpermg,o+$dirpermo $namedir
+							echo "Ses permissions sont $dirperm"
 						else
-							echo "Le répertoire $dossier existe déjà" 
+							echo "Le répertoire $namedir existe déjà" 
 					fi
 
-			elif [[ $(echo "$line" | egrep "\d+\s\d+\s\d+$") ]] # si la ligne finit par 3 nb séparés par des espace => décrit un fichier (permissions + taille + emplacement dans body)
+			# si la ligne finit par 3 nb séparés par des espace => décrit un fichier (permissions + taille + emplacement dans body)
+			elif [[ $(echo "$line" | egrep "\d+\s\d+\s\d+$") ]] 
 				then
 					echo ""
-					name=$(echo "$line" | cut -d " " -f 1) # On va affecter à des variables le nom et l'emplacement du contenu du fichier 
-						echo "Traitement du fichier $name"
+					
+					# On va affecter à des variables le nom et l'emplacement du contenu du fichier  :
+					namef=$(echo "$line" | cut -d " " -f 1) 
+						echo "Traitement du fichier $namef"
 					fdebut=$(echo "$line" | cut -d " " -f 4)
 						echo "Ligne de début dans tmp/body : $fdebut"
 					flength=$(echo "$line" | cut -d " " -f 5)
 						echo "Nombre de lignes dans tmp/body : $flength"
 					fend=$((fdebut+flength-1))
 						echo "Ligne de fin dans tmp/body : $fend"
-
-					curdir=$(pwd) # On sauvegarde l'emplacement où l'on est pour y envoyer le fichier qui va être créé 
 					
-					if [[ ! -f $name ]]
+					# On récupère les permissions à affecter au fichier :
+					fperm=$(echo "$line" | cut -d " " -f 2)
+					fpermu=$(echo "$line" | cut -d " " -f 2 | sed -e "s/^-\(...\)......$/\1/" | sed -e "s/-//g")
+					fpermg=$(echo "$line" | cut -d " " -f 2 | sed -e "s/^-...\(...\)...$/\1/" | sed -e "s/-//g")
+					fpermo=$(echo "$line" | cut -d " " -f 2 | sed -e "s/^-......\(...\)$/\1/" | sed -e "s/-//g")
+					
+					# On sauvegarde l'emplacement où l'on est pour y envoyer le fichier qui va être créé :
+					curdir=$(pwd) 
+					
+					if [[ ! -f $namef ]]
 						then
+							# Si la longueur du fichier vaut 0 on utilise "touch" car le "sed" a tendance à lui implémenter du contenu au vu à cause de la rédaction du code
 							if [[ $flength -eq 0 ]]
 								then
-									touch $curdir/$name # Si la longueur du fichier vaut 0 on utilise "touch" car le "sed" a tendance à lui implémenter du contenu au vu à cause de la rédaction du code
-									echo "Le fichier $name a été créé. C'est un fichier vide."
+									# On crée le fichier vide :
+									touch $curdir/$namef 
+									echo "Le fichier $namef a été créé. C'est un fichier vide."
+									
+									# On attribue les permissions du répertoire
+									chmod 000 $namef 
+									chmod u+$fpermu,g+$fpermg,o+$fpermo $namef
+									echo "Ses permissions sont $fperm"
 								else	
-									sed -n "$((fdebut)),$((fend))p" $dirtmp/body > $curdir/$name
-										echo "Le fichier $name a été créé"
+									# On crée le fichier :
+									sed -n "$((fdebut)),$((fend))p" $dirtmp/body > $curdir/$namef
+									echo "Le fichier $namef a été créé"
+
+									# On attribue les permissions du répertoire
+									chmod 000 $namef
+									chmod u+$fpermu,g+$fpermg,o+$fpermo $namef
+									echo "Ses permissions sont $fperm"
 							fi
 						else
-							echo "Le fichier $name existe déjà" 
+							echo "Le fichier $namef existe déjà" 
 					fi
 
 			elif [[ "$line" =~ ^@ ]]

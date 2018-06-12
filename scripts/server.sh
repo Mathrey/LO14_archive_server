@@ -37,7 +37,7 @@ function vsh() {
 		"-extract" )
 		echo "mode extract requested (but not yet functionnal)"
 		[ -e tmp/tube ] || mkfifo tmp/tube
-#		nc -lp $3 < tmp/tube | bash ./vsh-extract.sh args > tmp/tube
+#		nc -lp $3 < tmp/tube | bash ./vsh-extract.sh $args $currentDirectory > tmp/tube
 		nc -lp $3 < tmp/tube | echo "extract mode not yet implemented" > tmp/tube
 		rm tmp/tube
 		;;
