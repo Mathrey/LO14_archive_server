@@ -35,15 +35,15 @@ function vsh() {
 		;;
 
 		"-extract" )
-		echo "mode extract requested (but not yet functionnal)"
+		echo "mode extract requested"
 		[ -e tmp/tube ] || mkfifo tmp/tube
-#		nc -lp $3 < tmp/tube | bash ./vsh-extract.sh args > tmp/tube
-		nc -lp $3 < tmp/tube | echo "extract mode not yet implemented" > tmp/tube
+		nc -lp $3 < tmp/tube | bash ./vsh-extract.sh args > tmp/tube
+#		nc -lp $3 < tmp/tube | echo "extract mode not yet implemented" > tmp/tube
 		rm tmp/tube
 		;;
 
 		"-browse" )
-		echo "mode browse requested (but not yet functionnal)"
+		echo "mode browse requested"
 		[ -e tmp/tube ] || mkfifo tmp/tube
 		nc -lp $3 < tmp/tube | bash ./vsh-browse.sh $args > tmp/tube
 #		nc -lp $3 < tmp/tube | echo "browse mode not yet implemented" > tmp/tube

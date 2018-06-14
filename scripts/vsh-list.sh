@@ -17,4 +17,4 @@ function vsh_list() {
 
 }
 
-vsh_list # indispensable actuellement pour tester la fonction (vu qu'elle n'est pas encore appelée par server)
+vsh_list
