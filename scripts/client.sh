@@ -13,6 +13,7 @@ echo "Reminder :"
 echo "vsh -list [SERVER_NAME] [PORT]"
 echo "vsh -browse [SERVER_NAME] [PORT] [ARCHIVE_NAME]"
 echo "vsh -extract [SERVER_NAME] [PORT] [ARCHIVE_NAME]"
+echo ""
 echo -e "For a local server name should be localhost\n"
 
 currentDirectory=$(pwd)
