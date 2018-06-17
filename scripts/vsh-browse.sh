@@ -419,63 +419,63 @@ do
 								# On regarde si le chemin existe
 								if (echo "$currentArchive" | egrep -q "^directory $root$toPromptPath$")
 							
-								# On regarde si le fichier est dans le contenu du dossier	
-								then
-									currentContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-									# On regarde si l'entité existe dans le contenu de ce chemin et est un fichier
-									if (echo "$currentContent" | egrep -q "^$toPromptName [^d]")
-										then
-											catfile
-											# # On supprime le fichier
-											# # Récupération du contenu du fichier
-											# toDeleteFile=$(echo "$currentContent" | egrep "^$toDeleteName [^d]")
-
-											# # Récupération ligne de début du contenu
-											# toDeleteBegin=$(echo "$toDeleteFile" | cut -d" " -f4)
-
-											# toDeleteBegin=$((toDeleteBegin+bodyBegin-1))
-
-											# # Récupération longueur
-											# toDeleteLength=$(echo "$toDeleteFile" | cut -d" " -f5)
-
-											# # Calcul ligne de fin
-											# toDeleteEnd=$((toDeleteBegin+toDeleteLength-1))
-
-											# # Suppression fichier (header)
-											# currentArchive=$(echo "$currentArchive" | sed "s/${toDeleteFile}//")
-											# # Suppression fichier (body)
-											# currentArchive=$(echo "$currentArchive" | sed "${toDeleteBegin},${toDeleteEnd}s/.*//")
-											# echo "$toDeleteName deleted"
-											# echo  "$currentArchive"
-
-								# On regarde si l'entité existe dans le contenu de ce chemin et est un dossier
-								elif (echo "$currentContent" | egrep -q "^$toDeleteName [d]")
-
+									# On regarde si le fichier est dans le contenu du dossier	
 									then
+										currentContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+										# On regarde si l'entité existe dans le contenu de ce chemin et est un fichier
+										if (echo "$currentContent" | egrep -q "^$toPromptName [^d]")
+											then
+												catfile
+												# # On supprime le fichier
+												# # Récupération du contenu du fichier
+												# toDeleteFile=$(echo "$currentContent" | egrep "^$toDeleteName [^d]")
 
-										toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toDeletePath/$toDeleteName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-										toPromptFile=$(echo "$currentContent" | egrep "^$toDeleteName [d]")
-										echo "$toPromptName is a directory and cannot be prompt by cat"
+												# # Récupération ligne de début du contenu
+												# toDeleteBegin=$(echo "$toDeleteFile" | cut -d" " -f4)
 
-										# # On sauvegarde IFS et on le change pour la fonction récurrente
-										# oldIFS=$IFS
-										# IFS=$'\n'
-										# deleteDirectory $toDeleteName "$toDeletePath" "$toDeleteContent" "$toDeleteFile"
-										# # Restauration de IFS
-										# IFS=$oldIFS
-									else
-										echo "No file or directory found there"
+												# toDeleteBegin=$((toDeleteBegin+bodyBegin-1))
+
+												# # Récupération longueur
+												# toDeleteLength=$(echo "$toDeleteFile" | cut -d" " -f5)
+
+												# # Calcul ligne de fin
+												# toDeleteEnd=$((toDeleteBegin+toDeleteLength-1))
+
+												# # Suppression fichier (header)
+												# currentArchive=$(echo "$currentArchive" | sed "s/${toDeleteFile}//")
+												# # Suppression fichier (body)
+												# currentArchive=$(echo "$currentArchive" | sed "${toDeleteBegin},${toDeleteEnd}s/.*//")
+												# echo "$toDeleteName deleted"
+												# echo  "$currentArchive"
+
+										# On regarde si l'entité existe dans le contenu de ce chemin et est un dossier
+										elif (echo "$currentContent" | egrep -q "^$toDeleteName [d]")
+
+											then
+
+												toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toDeletePath/$toDeleteName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+												toPromptFile=$(echo "$currentContent" | egrep "^$toDeleteName [d]")
+												echo "$toPromptName is a directory and cannot be prompt by cat"
+
+												# # On sauvegarde IFS et on le change pour la fonction récurrente
+												# oldIFS=$IFS
+												# IFS=$'\n'
+												# deleteDirectory $toDeleteName "$toDeletePath" "$toDeleteContent" "$toDeleteFile"
+												# # Restauration de IFS
+												# IFS=$oldIFS
+											else
+												echo "No file or directory found there"
+										fi
 								fi
-					fi
-			else
-				echo "No such path found"
-			fi
-
-
+						fi
+			#else
+			#	echo "No such path found"
+			#fi
+				fi
 			else
 				echo "No file in argument to prompt"
-			fi
 		fi	
+
 		;;
 
 		# Supprime un fichier/dossier
