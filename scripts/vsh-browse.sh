@@ -243,8 +243,20 @@ do
 		fi
 		;;
 
+		# Affiche le contenu du fichier donné en entrée
 		"cat" )
-		echo "commande cat"
+
+		toprompt=$2
+		echo $toprompt
+
+		if [[ -n "$toprompt" ]]
+			then
+				# On trouve la ligne de l'archive des lignes de début et fin du contenu inscrit dans body
+				sed -e "^$toprompt "
+
+			else
+				echo "No file in argument to prompt"
+
 		;;
 
 		# Supprime un fichier/dossier
