@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# TODO : Supprimer les lignes *nomdufichier d---------* et *directory $root$pathToDelete$nameToDelete*
-# BUG : supprime tous les dossiers du même nom peu importe leur chemin
+# BUG : supprime toutes entités qui ont le même nom, peu importe là où ils sont
 
 # Ferme le client si l'utilisateur a oublié de mettre l'archive
 if [ -z $4 ]
@@ -14,10 +13,6 @@ fi
 # Fonction récurrente permettant de supprimer un dossier
 #arguments : $1=$toDeleteName (A; A1; ...) $2=$toDeletePath (/; /A; /A/A1; ...) (où se trouve le dossier) $3=$toDeleteContent $4=$toDeleteFile
 function deleteDirectory() {
-
-	# On sauvegarde IFS et on le change pour la boucle for
-	oldIFS=$IFS
-	IFS=$'\n'
 
 	# Début de la fonction
 	#pathToDelete="$4"
@@ -53,7 +48,6 @@ function deleteDirectory() {
 			echo -e "$iName contient :\n$iContent"
 			if [ -n "$iContent" ]
 			then	
-				echo "boucle"
 				deleteDirectory $iName $iPathParent $iContent $i
 			else
 				echo "$iName est vide, suppression en cours"
@@ -129,33 +123,6 @@ function deleteDirectory() {
 	currentArchive=$(echo "$currentArchive" | sed "s:${4}::")
 	echo "$currentArchive"
 
-##############################################
-	# Récupérer le début du dossier parent
-	#parentPath=$(echo "$2" | egrep -o ".*/" | sed "s/\/$//")
-
-	# BUG : Le "/" dans ${2} est interprété par la commande sed
-	# FIX : Faire un sed qui remplace les / par des .
-	# NOTE : on aurait pu utiliser une option de sed qui change le type de séparateur
-	#echo "$parentPath"
-	#parentContentBegin="directory $root$parentPath"
-
-	#parentContentBegin=$(echo "$parentPath" | sed "s/\//\./g")
-	#echo "$parentContentBegin"
-	#parentContentEnd="@"
-	# Supprimer dans l'archive dans le bon répertoire
-	# sed marche dans le terminal mais pas dans le programme...
-	# echo "$currentArchive" | sed '/'"$parentContentBegin"' ?$/,'"$parentContentEnd"'/s{s/'"$4"'//}'
-
-	
-	#echo "$currentArchive"
-	#directoryToDeletePath=$(echo "$2" | egrep ".*/")
-	#echo "$root$directoryToDeletePath"
-
-	#echo "$currentArchive"
-	#echo "$1 supprimé"
-
-	# Restauration de IFS
-IFS=$oldIFS
 	##############
 
 #dans la fonction :
@@ -179,13 +146,15 @@ headBegin=$(echo "$currentArchive" | head -n 1 | cut -d":" -f1)
 # Numéro de ligne de début du body. Pour archive1 par exemple, $bodyBegin a la valeur : 25 
 bodyBegin=$(echo "$currentArchive" | head -n 1 | cut -d":" -f2)
 
+echo "Use pwd, ls, cd, cat and rm as usual"
 echo -n "vsh:> "
 # Tant que l'utilisateur ne quitte pas le programme
 while read input
 do
 	# On change les arguments pour les gérer avec $1 $2 etc.
 	set -- $(echo $input)
-	case $1 in
+	echo "$1"
+	case "$1" in
 
 		# Affiche le dossier courant
 		"pwd" )
@@ -243,6 +212,7 @@ do
 			# FIX : enlever le $ à la fin de la régex
 			# UPDATE : il y a un espace après A/A2 et A/A3
 			# FIX : ajouter " ?$" à la fin de la régex pour gérer la présence d'un possible espace
+			# FIX : suppression des espaces aux endroits où ils n'ont pas lieu d'être
 			if (echo "$currentArchive" | egrep -q "^directory $root$path ?$")
 			then
 				currentDirectory=$(echo "$path")
@@ -315,6 +285,7 @@ do
 
 			else
 				echo "No file in argument to prompt"
+			fi
 		;;
 
 		# Supprime un fichier/dossier
@@ -372,8 +343,12 @@ do
 						toDeleteContent=$(echo "$currentArchive" | awk -v directory="$root$toDeletePath$toDeleteName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
 						echo "In this directory :"
 						echo "$toDeleteContent"
-						# OK
+						# On sauvegarde IFS et on le change pour la boucle for
+						oldIFS=$IFS
+						IFS=$'\n'
 						deleteDirectory $toDeleteName "$toDeletePath" "$toDeleteContent" "$toDeleteFile"
+						# Restauration de IFS
+						IFS=$oldIFS
 
 					# On vérifie que le chemin est un directory : l'entité est un dossier (cas où le dossier n'est pas à la racine)
 					elif (echo "$currentArchive" | egrep "^directory $root$toDeletePath/$toDeleteName ?$")
@@ -384,8 +359,12 @@ do
 						toDeleteContent=$(echo "$currentArchive" | awk -v directory="$root$toDeletePath/$toDeleteName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
 						echo "In this directory :"
 						echo "$toDeleteContent"
-						# OK
+						# On sauvegarde IFS et on le change pour la boucle for
+						oldIFS=$IFS
+						IFS=$'\n'
 						deleteDirectory $toDeleteName "$toDeletePath" "$toDeleteContent" "$toDeleteFile"
+						# Restauration de IFS
+						IFS=$oldIFS
 
 					# On vérifie que le nom existe et que les permissions ne commencent pas par d : l'entité est un fichier
 					elif (echo "$toDeletePathContent" | egrep "^$toDeleteName [^d]")
@@ -479,7 +458,12 @@ do
 						toDeleteFile=$(echo "$currentContent" | egrep "^$toDeleteName [d]")
 						echo "$toDeleteFile"
 						echo "$toDeleteContent"
+						# On sauvegarde IFS et on le change pour la boucle for
+						oldIFS=$IFS
+						IFS=$'\n'
 						deleteDirectory $toDeleteName "$toDeletePath" "$toDeleteContent" "$toDeleteFile"
+						# Restauration de IFS
+						IFS=$oldIFS
 						else
 							echo "No file or directory found there"
 						fi
@@ -523,8 +507,12 @@ do
 								echo "In this directory :"
 								echo "$toDeleteContent"
 								toDeleteFile=$(echo "$currentContent" | egrep "$toDeleteName d")
-								# OK
+								# On sauvegarde IFS et on le change pour la boucle for
+								oldIFS=$IFS
+								IFS=$'\n'
 								deleteDirectory $toDeleteName $toDeletePath "$toDeleteContent" "$toDeleteFile"
+								# Restauration de IFS
+								IFS=$oldIFS
 							# BUG : ne liste pas le bon contenu du dossier à supprimer lorsque l'on n'est pas à la racine (liste le dossier courant à la place)
 							# FIX : gérer le cas où l'on est à la racine pour la variable $toDeletePath
 							else
@@ -534,8 +522,12 @@ do
 								echo "In this directory :"
 								echo "$toDeleteContent"
 								toDeleteFile=$(echo "$currentContent" | egrep "$toDeleteName d")
-								# OK
+								# On sauvegarde IFS et on le change pour la boucle for
+								oldIFS=$IFS
+								IFS=$'\n'
 								deleteDirectory $toDeleteName $toDeletePath "$toDeleteContent" "$toDeleteFile"
+								# Restauration de IFS
+								IFS=$oldIFS
 							fi
 
 					# On vérifie que le nom existe dans le dossier courant et que les permissions ne commencent pas par d : l'entité est un fichier
@@ -578,5 +570,6 @@ do
 		* )
 		echo "unknown command"
 	esac
+	set -- $(echo $input)
 	echo -n "vsh:> "
 done

@@ -8,6 +8,12 @@ function usage() {
 	exit -1
 }
 
+if [ ! -e "./tmp" ]
+then
+	mkdir ./tmp
+	echo "tmp/ created"
+fi
+
 echo -e "\nserver.sh should be running at this point\n"
 echo "Reminder :"
 echo "vsh -list [SERVER_NAME] [PORT]"
