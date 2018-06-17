@@ -16,12 +16,13 @@ fi
 cd tmp
 dirtmp=$(pwd)
 
-# On stocke le chemin absolu vers le dossier archives
-cd ../../archives
-dirarchive=$(pwd)
+# OBSOLETE : On stocke le chemin absolu vers le dossier archives
+# cd ../../archives
+# dirarchive=$(pwd)
 
-# On se place dans le dossier des scripts
-cd ../scripts
+# OSBSOLETE On se place dans le dossier des scripts
+# cd ../scripts
+
 # read input # fichier correspondant à l'archive qui va être traitée, non nécessaire lorsque la fonction sera appelée par server
 
 echo ""
