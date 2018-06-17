@@ -3,29 +3,29 @@
 # Les fonctions sont appelées par le script "server"
 # Le dossier "script" et le dossier "archives" sont au même niveau d'arborescence
 # Il faut donc régulièrement avoir recours à cd ../archives pour intéragir avec son contenu 
-
-function vsh_extract() {
 	
-	cd tmp
-	dirtmp=$(pwd) # On stocke le chemin absolu vers le dossier tmp
-	cd ../../archives
-	read input # fichier correspondant à l'archive qui va être traitée, non nécessaire lorsque la fonction sera appelée par server
-	echo ""
-	asroot=$(pwd) # À changer par le répertoire du client ?
+# Ferme le client si l'utilisateur a oublié de mettre l'archive
+if [ -z $4 ]
+	then
+		echo "No archive given"
+		echo "Usage : vsh -extract [SERVER_NAME] [PORT] [ARCHIVE_NAME]"
+		exit 1
+fi
 
-############################################################ 
+# On stocke le chemin absolu vers le dossier tmp
+cd tmp
+dirtmp=$(pwd)
 
-# tentative première, créée l'abrorescence des dossiers mais c'est tout
+# On stocke le chemin absolu vers le dossier archives
+cd ../../archives
+dirarchive=$(pwd)
 
-	# awk '/^directory/ {print $2}' $input > ../scripts/tmp/tmp-extract # $input sera normalement remplacé par $4, provenant de la commande vsh -extract [serveur] [port] [archive]
-	# #cat ../scripts/tmp/tmp-extract # Pour vérifier que le fichier tmp-extract contient bien ce que l'on veut
-	# while read line
-	# 	do
-	#  		mkdir -p $line # crée l'arborescence de dossiers
-	#  	done < ../scripts/tmp/tmp-extract
-	# rm ../scripts/tmp/tmp-extract
+# On se place dans le dossier des scripts
+cd ../scripts
+# read input # fichier correspondant à l'archive qui va être traitée, non nécessaire lorsque la fonction sera appelée par server
 
-############################################################
+echo ""
+asroot=$(pwd) # À changer par le répertoire du client ?
 	
 	# la variable hdebut donne la ligne où commence le header de l'archive
 	hdebut=$(sed '1q' $input | cut -d : -f 1) 
@@ -151,7 +151,16 @@ function vsh_extract() {
 			fi
 		done < $dirtmp/header
 
+############################################################ 
 
-}
+# tentative première, créée l'abrorescence des dossiers mais c'est tout
 
-vsh_extract # indispensable actuellement pour tester la fonction (vu qu'elle n'est pas encore appelée par server)
+	# awk '/^directory/ {print $2}' $input > ../scripts/tmp/tmp-extract # $input sera normalement remplacé par $4, provenant de la commande vsh -extract [serveur] [port] [archive]
+	# #cat ../scripts/tmp/tmp-extract # Pour vérifier que le fichier tmp-extract contient bien ce que l'on veut
+	# while read line
+	# 	do
+	#  		mkdir -p $line # crée l'arborescence de dossiers
+	#  	done < ../scripts/tmp/tmp-extract
+	# rm ../scripts/tmp/tmp-extract
+
+############################################################
