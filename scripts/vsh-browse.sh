@@ -101,6 +101,73 @@ function deleteDirectory() {
 	
 }
 
+function catfile(){
+
+# la variable hdebut donne la ligne où commence le header de l'archive
+hdebut=$(echo "$currentArchive" | sed '1q' | cut -d : -f 1) # head -n 1 | cut -d : -f 1)
+# la variable bdebut donne la ligne où commence le body de l'archive
+bdebut=$(echo "$currentArchive" | sed '1q' | cut -d : -f 2) 
+# la variable hend donne la ligne où se termine le header de l'archive
+hend=$(($bdebut-1)) 
+# la variable bend donne la ligne où se termine le body de l'archive
+bend=$(echo "$currentArchive" | sed -n '$=')
+# On crée deux variables pour séparer les contenus du header et du body
+header=$(echo "$currentArchive" | sed -n "$((hdebut)),$((hend))p")
+body=$(echo "$currentArchive" | sed -n "$((bdebut)),$((bend))p")
+
+# Dans la fonction principale, on a besoin de lire le header ligne par ligne
+# Avec une boucle for, il faut donc changer temporairement le séparateur de champ
+# pour que seul soit reconnu le saut de ligne
+
+# Sauvegarde du séparateur de champ
+old_IFS=$IFS 
+# Nouveau séparateur de champ, le caractère fin de ligne
+IFS=$'\n' 
+
+# Fonction principale
+# On teste si l'archive contient le fichier à afficher
+if [[ $(echo "$header" | egrep "^${toPrompt}\s[^d]") ]]
+	then
+		for line in $header
+			do
+				# On trouve la ligne de l'archive indexant le fichier à présenter
+				if [[ $(echo "$line" | egrep "^${toPrompt}\s[^d]") ]]
+					then
+						echo ""
+						# On va affecter à des variables le nom et l'emplacement du contenu du fichier  :
+						namef=$(echo "$line" | cut -d " " -f 1) 
+							echo "Processing file $namef"
+						fdebut=$(echo "$line" | cut -d " " -f 4)
+							echo "Debut lign in archive body : $fdebut"
+						flength=$(echo "$line" | cut -d " " -f 5)
+							echo "Number of ligns in body : $flength"
+						fend=$((fdebut+flength-1))
+							echo "End lign in archive body : $fend"
+						echo ""
+
+						# Si la longueur du fichier vaut 0 il n'y a rien à afficher, mais il vaut mieux prévenir le client que cela est normal
+						if [[ $flength -eq 0 ]]
+							then
+								echo "The file $namef is an empty file."
+								echo ""					
+							else	
+								echo "The file $namef contains :"
+								echo ""
+								echo "$body" | sed -n "$((fdebut)),$((fend))p"
+								echo ""
+						fi
+				fi 
+			done
+	else
+		echo "You may have mistaken a directory for a file, or misspelled the name of the file."
+		echo "Check again!"
+fi
+
+# Rétablissement du séparateur de champ par défaut
+IFS=$old_IFS 
+
+}
+
 ## Variables locales
 # Récupère le fichier texte de l'archive
 currentArchive=$(cat ../archives/$4)
@@ -241,70 +308,168 @@ do
 		# Affiche le contenu du fichier donné en entrée
 		"cat" )
 
-		toprompt=$2
-		echo $toprompt
+		toPrompt=$2
+		echo $toPrompt
 
-		if [[ -n "$toprompt" ]]
+		if [[ -n "$toPrompt" ]]
 			then
+				# On retire le possible "/" à la fin d'un chemin (sauf si c'est la racine)
+				if (echo "$toPrompt" | egrep -q ".+/$")
+					then
+						toPrompt=$(echo "$toPrompt" | sed 's/.$//')
+						echo "The variable toPrompt : $toPrompt"
+	       		fi
 
-			# la variable hdebut donne la ligne où commence le header de l'archive
-			hdebut=$(echo "$currentArchive" | sed '1q' | cut -d : -f 1) # head -n 1 | cut -d : -f 1)
-			# la variable bdebut donne la ligne où commence le body de l'archive
-			bdebut=$(echo "$currentArchive" | sed '1q' | cut -d : -f 2) 
-			# la variable hend donne la ligne où se termine le header de l'archive
-			hend=$(($bdebut-1)) 
-			# la variable bend donne la ligne où se termine le body de l'archive
-			bend=$(echo "$currentArchive" | sed -n '$=')
-			# On crée deux variables pour séparer les contenus du header et du body
-			header=$(echo "$currentArchive" | sed -n "$((hdebut)),$((hend))p")
-			body=$(echo "$currentArchive" | sed -n "$((bdebut)),$((bend))p")
+	       		# Chemin absolu
+				if (echo "$toPrompt" | egrep -q "^/")
+					then
+						# Si l'entrée est la racine
+						if [ "$toPrompt" = "/" ]
+							echo "The root directory is not a file"
 
-			# Dans la fonction principale, on a besoin de lire le header ligne par ligne
-			# Avec une boucle for, il faut donc changer temporairement le séparateur de champ
-			# pour que seul soit reconnu le saut de ligne
+					else
+						# On récupère le chemin du fichier à afficher (-o ne print que les matchs) sous la forme A/A1 ou A
+						toPromptPath=$(echo "$toPrompt" | egrep -o ".*/")
+						echo "The variable toPromptPath : $toPromptPath" 
+						if [ $toPromptPath != "/" ]
+							then
+								toPromptPath=$(echo "$toPromptPath" | sed "s/\/$//")
+								echo "The new variable toPromptPath : $toPromptPath"
+						fi 
 
-			# Sauvegarde du séparateur de champ
-			old_IFS=$IFS 
-			# Nouveau séparateur de champ, le caractère fin de ligne
-			IFS=$'\n' 
+						# On recupére le nom de l'entité à afficher
+						toPromptName=$(echo "$toPrompt" | egrep -o "[[:alnum:]]+$")
+						echo "The variable toPromptName : $toPromptName"
+						# On récupère le contenu du chemin de l'entité
+						toPromptPathContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+						echo "The variable toPromptPathContent : $toPromptPathContent"
+						
+						# On vérifie que le chemin est un directory : l'entité est un dossier (cas où le dossier est à la racine)
+						if (echo "$currentArchive" | egrep -q "^directory $root$toPromptPath$toPromptName ?$")
+							then
+								toPromptFile=$(echo "$toPromptPathContent" | egrep "^$toPromptName d")
+								toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath$toPromptName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+								echo "$toPromptName is a directory and cannot be prompt by cat"
+								# On sauvegarde IFS et on le change pour la fonction récurrente
+								# oldIFS=$IFS
+								# IFS=$'\n'
+								# deleteDirectory $toDeleteName "$toPromptPath" "$toPromptContent" "$toPromptFile"
+								# Restauration de IFS
+								# IFS=$oldIFS
 
-			# Fonction principale
-			for line in $header
-				do
-					# On trouve la ligne de l'archive indexant le fichier à présenter
-					if [[ $(echo "$line" | egrep "^${toprompt}\s[^d]") ]]
-						then
-							echo ""
-							# On va affecter à des variables le nom et l'emplacement du contenu du fichier  :
-							namef=$(echo "$line" | cut -d " " -f 1) 
-								echo "Processeing file $namef"
-							fdebut=$(echo "$line" | cut -d " " -f 4)
-								echo "Debut lign in archive body : $fdebut"
-							flength=$(echo "$line" | cut -d " " -f 5)
-								echo "Number of ligns in body : $flength"
-							fend=$((fdebut+flength-1))
-								echo "End lign in archive body : $fend"
-							echo""
+						# On vérifie que le chemin est un directory : l'entité est un dossier (cas où le dossier n'est pas à la racine)
+						elif (echo "$currentArchive" | egrep -q "^directory $root$toPromptPath/$toPromptName ?$")
+							then
+								toPromptFile=$(echo "$toPromptPathContent" | egrep "^$toPromptName d")
+								toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath/$toPromptName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+								echo "$toPromptName is a directory and cannot be prompt by cat"
 
-							# Si la longueur du fichier vaut 0 il n'y a rien à afficher, mais il vaut mieux prévenir le client que cela est normal
-							if [[ $flength -eq 0 ]]
-								then
-									echo "The file $namef is an empty file."
-									echo ""					
-								else	
-									echo "The file $namef contains :"
-									echo ""
-									echo "$body" | sed -n "$((fdebut)),$((fend))p"
-									echo ""
-							fi
+								# On sauvegarde IFS et on le change pour la fonction récurrente
+								# oldIFS=$IFS
+								# IFS=$'\n'
+								# deleteDirectory $toPromptName "$toPromptPath" "$toPromptContent" "$toPromptFile"
+								# Restauration de IFS
+								# IFS=$oldIFS
+
+						# On vérifie que le nom existe et que les permissions ne commencent pas par d : l'entité est un fichier
+						elif (echo "$toPromptPathContent" | egrep -q "^$toPromptName [^d]")
+							then
+								catfile
+								# Récupération du contenu du fichier
+								# toPromptFile=$(echo "$currentArchive" | egrep "^$toPromptName [^d]")
+
+								# Récupération ligne de début du contenu
+								# toPromptBegin=$(echo "$toPromptFile" | cut -d" " -f4)
+
+								# toPromptBegin=$((toPromptBegin+bodyBegin-1))
+
+								# Récupération longueur
+								# toPromptLength=$(echo "$toPromptFile" | cut -d" " -f5)
+
+								# Calcul ligne de fin
+								# toPromptEnd=$((toPromptBegin+toPromptLength-1))
+
+								# Suppression fichier (headder)
+								# currentArchive=$(echo "$currentArchive" | sed "s/${toPromptFile}//")
+								# Suppression fichier (body)
+								#currentArchive=$(echo "$currentArchive" | sed "${toPromptBegin},${toPromptEnd}s/.*//")
+								# echo "$toPromptName contains :"
+								# echo "$currentArchive"
 						else
-							echo "You may have mistaken a directory for a file, or misspelled the name of the file."
-							echo "Check again!"
-					fi 
-				done
+							echo "No file found"
+						fi
+				fi
+			
+			# Chemin relatif
+			else
+				
+				if (echo "$toPrompt" | egrep -q "/")
+					# On souhaite afficher un fichier dans un dossier fils
+					then
+						# On récupère le chemin de l'entité à afficher
+						if [ "$currentDirectory" = "/" ]
+							then
+								toPromptPath=$(echo "/$toPrompt" | sed -r 's/(\/[^\/]+)$//')
+							else
+								toDeletePath=$(echo "$currentDirectory/$toPrompt" | sed -r 's/(\/[^\/]+)$//')
+						fi
 
-			# Rétablissement du séparateur de champ par défaut
-			IFS=$old_IFS 
+						# On recupére le nom de l'entité à afficher
+						toPromptName=$(echo "$toPrompt" | egrep -o "[[:alnum:]]+$")
+
+						# On regarde si le chemin existe
+						if (echo "$currentArchive" | egrep -q "^directory $root$toPromptPath$")
+							
+							# On regarde si le fichier est dans le contenu du dossier	
+							then
+								currentContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+								# On regarde si l'entité existe dans le contenu de ce chemin et est un fichier
+									if (echo "$currentContent" | egrep -q "^$toPromptName [^d]")
+										then
+											catfile
+											# # On supprime le fichier
+											# # Récupération du contenu du fichier
+											# toDeleteFile=$(echo "$currentContent" | egrep "^$toDeleteName [^d]")
+
+											# # Récupération ligne de début du contenu
+											# toDeleteBegin=$(echo "$toDeleteFile" | cut -d" " -f4)
+
+											# toDeleteBegin=$((toDeleteBegin+bodyBegin-1))
+
+											# # Récupération longueur
+											# toDeleteLength=$(echo "$toDeleteFile" | cut -d" " -f5)
+
+											# # Calcul ligne de fin
+											# toDeleteEnd=$((toDeleteBegin+toDeleteLength-1))
+
+											# # Suppression fichier (header)
+											# currentArchive=$(echo "$currentArchive" | sed "s/${toDeleteFile}//")
+											# # Suppression fichier (body)
+											# currentArchive=$(echo "$currentArchive" | sed "${toDeleteBegin},${toDeleteEnd}s/.*//")
+											# echo "$toDeleteName deleted"
+											# echo  "$currentArchive"
+
+							# On regarde si l'entité existe dans le contenu de ce chemin et est un dossier
+							elif (echo "$currentContent" | egrep -q "^$toDeleteName [d]")
+								then
+
+									toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toDeletePath/$toDeleteName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+									toPromptFile=$(echo "$currentContent" | egrep "^$toDeleteName [d]")
+									echo "$toPromptName is a directory and cannot be prompt by cat"
+
+									# # On sauvegarde IFS et on le change pour la fonction récurrente
+									# oldIFS=$IFS
+									# IFS=$'\n'
+									# deleteDirectory $toDeleteName "$toDeletePath" "$toDeleteContent" "$toDeleteFile"
+									# # Restauration de IFS
+									# IFS=$oldIFS
+								else
+									echo "No file or directory found there"
+							fi
+					else
+						echo "No such path found"
+					fi
+
 
 			else
 				echo "No file in argument to prompt"
@@ -321,7 +486,7 @@ do
 			if (echo "$toDelete" | egrep -q ".+/$")
 			then
 				toDelete=$(echo "$toDelete" | sed 's/.$//')
-	                fi
+	       	fi
 
 			# Chemin absolu
 			if (echo "$toDelete" | egrep -q "^/")
