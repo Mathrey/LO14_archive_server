@@ -12,7 +12,7 @@ fi
 
 echo ""
 # On stocke le répertoire courant pour la future extraction 
-dirextract=$5 
+dirextract=$5
 
 # On stocke le chemin absolu vers le dossier tmp
 cd tmp

@@ -451,6 +451,7 @@ do
 
 							# On regarde si l'entité existe dans le contenu de ce chemin et est un dossier
 							elif (echo "$currentContent" | egrep -q "^$toDeleteName [d]")
+
 								then
 
 									toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toDeletePath/$toDeleteName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
