@@ -245,6 +245,8 @@ do
 
 		"cat" )
 		echo "commande cat"
+		toprompt=$2
+		echo "$toprompt"
 		;;
 
 		# Supprime un fichier/dossier

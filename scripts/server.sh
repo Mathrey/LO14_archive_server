@@ -29,7 +29,7 @@ function vsh() {
 		"-list" )
 		echo "list mode requested @ "$(date +%T)
 		[ -e tmp/tube ] || mkfifo tmp/tube
-		nc -lp $3 < tmp/tube | bash ./vsh-list.sh args currentDirectory > tmp/tube
+		nc -lp $3 < tmp/tube | bash ./vsh-list.sh args $currentDirectory > tmp/tube
 		echo "request sent @ "$(date +%T)
 		rm tmp/tube
 		;;
