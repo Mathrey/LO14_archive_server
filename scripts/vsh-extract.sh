@@ -24,7 +24,7 @@ dirArchives=$(pwd)
 currentArchive=$(cat $dirArchives/$4)
 
 # la variable hdebut donne la ligne où commence le header de l'archive
-hdebut=$(echo "$currentArchive" | sed '1q' | cut -d : -f 1) # head -n 1 | cut -d : -f 1)
+hdebut=$(echo "$currentArchive" | sed '1q' | cut -d : -f 1)
 # la variable bdebut donne la ligne où commence le body de l'archive
 bdebut=$(echo "$currentArchive" | sed '1q' | cut -d : -f 2) 
 # la variable hend donne la ligne où se termine le header de l'archive
