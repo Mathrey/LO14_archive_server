@@ -123,8 +123,6 @@ function deleteDirectory() {
 	currentArchive=$(echo "$currentArchive" | sed "s:${4}::")
 	echo "$currentArchive"
 
-	##############
-
 #dans la fonction :
 #----pour tout le contenu du dossier :
 #--------si dossier, on lance la fonction, le dossier et son contenu est supprimé
@@ -456,8 +454,7 @@ do
 						# NOT-OK
 						toDeleteContent=$(echo "$currentArchive" | awk -v directory="$root$toDeletePath/$toDeleteName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
 						toDeleteFile=$(echo "$currentContent" | egrep "^$toDeleteName [d]")
-						echo "$toDeleteFile"
-						echo "$toDeleteContent"
+
 						# On sauvegarde IFS et on le change pour la boucle for
 						oldIFS=$IFS
 						IFS=$'\n'
@@ -513,6 +510,7 @@ do
 								deleteDirectory $toDeleteName $toDeletePath "$toDeleteContent" "$toDeleteFile"
 								# Restauration de IFS
 								IFS=$oldIFS
+
 							# BUG : ne liste pas le bon contenu du dossier à supprimer lorsque l'on n'est pas à la racine (liste le dossier courant à la place)
 							# FIX : gérer le cas où l'on est à la racine pour la variable $toDeletePath
 							else
