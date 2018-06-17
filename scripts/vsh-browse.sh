@@ -246,8 +246,65 @@ do
 
 		if [[ -n "$toprompt" ]]
 			then
-				# On trouve la ligne de l'archive des lignes de début et fin du contenu inscrit dans body
-				sed -e "^$toprompt "
+
+			# la variable hdebut donne la ligne où commence le header de l'archive
+			hdebut=$(echo "$currentArchive" | sed '1q' | cut -d : -f 1) # head -n 1 | cut -d : -f 1)
+			# la variable bdebut donne la ligne où commence le body de l'archive
+			bdebut=$(echo "$currentArchive" | sed '1q' | cut -d : -f 2) 
+			# la variable hend donne la ligne où se termine le header de l'archive
+			hend=$(($bdebut-1)) 
+			# la variable bend donne la ligne où se termine le body de l'archive
+			bend=$(echo "$currentArchive" | sed -n '$=')
+			# On crée deux variables pour séparer les contenus du header et du body
+			header=$(echo "$currentArchive" | sed -n "$((hdebut)),$((hend))p")
+			body=$(echo "$currentArchive" | sed -n "$((bdebut)),$((bend))p")
+
+			# Dans la fonction principale, on a besoin de lire le header ligne par ligne
+			# Avec une boucle for, il faut donc changer temporairement le séparateur de champ
+			# pour que seul soit reconnu le saut de ligne
+
+			# Sauvegarde du séparateur de champ
+			old_IFS=$IFS 
+			# Nouveau séparateur de champ, le caractère fin de ligne
+			IFS=$'\n' 
+
+			# Fonction principale
+			for line in $header
+				do
+					# On trouve la ligne de l'archive indexant le fichier à présenter
+					if [[ $(echo "$line" | egrep "^${toprompt}\s[^d]") ]]
+						then
+							echo ""
+							# On va affecter à des variables le nom et l'emplacement du contenu du fichier  :
+							namef=$(echo "$line" | cut -d " " -f 1) 
+								echo "Processeing file $namef"
+							fdebut=$(echo "$line" | cut -d " " -f 4)
+								echo "Debut lign in archive body : $fdebut"
+							flength=$(echo "$line" | cut -d " " -f 5)
+								echo "Number of ligns in body : $flength"
+							fend=$((fdebut+flength-1))
+								echo "End lign in archive body : $fend"
+							echo""
+
+							# Si la longueur du fichier vaut 0 il n'y a rien à afficher, mais il vaut mieux prévenir le client que cela est normal
+							if [[ $flength -eq 0 ]]
+								then
+									echo "The file $namef is an empty file."
+									echo ""					
+								else	
+									echo "The file $namef contains :"
+									echo ""
+									echo "$body" | sed -n "$((fdebut)),$((fend))p"
+									echo ""
+							fi
+						else
+							echo "You may have mistaken a directory for a file, or misspelled the name of the file."
+							echo "Check again!"
+					fi 
+				done
+
+			# Rétablissement du séparateur de champ par défaut
+			IFS=$old_IFS 
 
 			else
 				echo "No file in argument to prompt"

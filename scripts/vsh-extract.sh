@@ -31,7 +31,7 @@ bdebut=$(echo "$currentArchive" | sed '1q' | cut -d : -f 2)
 hend=$(($bdebut-1)) 
 # la variable bend donne la ligne où se termine le body de l'archive
 bend=$(echo "$currentArchive" | sed -n '$=')
-
+# On crée deux variables pour séparer les contenus du header et du body
 header=$(echo "$currentArchive" | sed -n "$((hdebut)),$((hend))p")
 body=$(echo "$currentArchive" | sed -n "$((bdebut)),$((bend))p")
 
@@ -128,7 +128,7 @@ for line in $header
 								echo "Its permissions are $fperm"
 							else	
 								# On crée le fichier :
-								sed -n "$((fdebut)),$((fend))p" $dirtmp/body > $curdir/$namef
+								echo "$body" | sed -n "$((fdebut)),$((fend))p" > $curdir/$namef
 								echo "The file $namef has been created"
 
 								# On attribue les permissions du répertoire
@@ -158,5 +158,5 @@ for line in $header
 		fi
 	done
 
-# rétablissement du séparateur de champ par défaut
+# Rétablissement du séparateur de champ par défaut
 IFS=$old_IFS 
