@@ -29,7 +29,7 @@ function vsh() {
 		"-list" )
 		echo "list mode requested @ "$(date +%T)
 		[ -e tmp/tube ] || mkfifo tmp/tube
-		nc -lp $3 < tmp/tube | bash ./vsh-list.sh args currentDirectory > tmp/tube
+		nc -lp $3 < tmp/tube | bash ./vsh-list.sh $args $currentDirectory > tmp/tube
 		echo "request sent @ "$(date +%T)
 		rm tmp/tube
 		;;
@@ -37,7 +37,7 @@ function vsh() {
 		"-extract" )
 		echo "mode extract requested"
 		[ -e tmp/tube ] || mkfifo tmp/tube
-		nc -lp $3 < tmp/tube | bash ./vsh-extract.sh args > tmp/tube
+		nc -lp $3 < tmp/tube | bash ./vsh-extract.sh $args $currentDirectory > tmp/tube
 #		nc -lp $3 < tmp/tube | echo "extract mode not yet implemented" > tmp/tube
 		rm tmp/tube
 		;;
@@ -63,6 +63,7 @@ function vsh() {
 if (test $# -eq 1) && (echo $1 | grep -E -q "^[0-9]+$")
 then
 	echo -e "\nit works !\n"
+	echo -e "Archives should be in this directory :\n../archives\nin a text format\n"
 else
 	usage
 fi

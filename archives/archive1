@@ -15,9 +15,9 @@ toto3 -rw-r--r-- 121 14 3
 directory Exemple/Test/A/A1
 toto4 -rw-r--r-- 0 17 0
 @
-directory Exemple/Test/A/A2 
+directory Exemple/Test/A/A2
 @
-directory Exemple/Test/A/A3 
+directory Exemple/Test/A/A3
 @
 directory Exemple/Test/B
 bar -rw-r--r-- 202 17 6
