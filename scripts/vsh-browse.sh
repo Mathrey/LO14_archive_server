@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# TODO : Supprimer les lignes *nomdufichier d---------* et *directory $root$pathToDelete$nameToDelete*
-# BUG : supprime tous les dossiers du même nom peu importe leur chemin
+# BUG : supprime toutes entités qui ont le même nom, peu importe là où ils sont
 
 # Ferme le client si l'utilisateur a oublié de mettre l'archive
 if [ -z $4 ]
@@ -15,88 +14,64 @@ fi
 #arguments : $1=$toDeleteName (A; A1; ...) $2=$toDeletePath (/; /A; /A/A1; ...) (où se trouve le dossier) $3=$toDeleteContent $4=$toDeleteFile
 function deleteDirectory() {
 
-	# Début de la fonction
-	#pathToDelete="$4"
-	#echo $pathToDelete
-	echo "test"
-	echo "$1"
-	echo "$2"
-	echo "$3"
-	echo "$4"
 	# BUG : i contient toutes les lignes de $3
 	# FIX : for i in "$3" -> for i in $3
 	for i in $3
-	do
-		echo "Suppression de $i"	
+	do	
 		iName=$(echo "$i" | cut -d" " -f1)
-		echo "$iName contenu dans $1"
 		if (echo "$3" | egrep -q "^${iName} d")
 		then
 			if [ "$2" = "/" ]	
 			then
 				iPath=$(echo "$2$1/$iName")
 				iPathParent=$(echo "$2$1")
-				echo "test1 $iPath $iPathParent"
 			else
 				iPath=$(echo "$2/$1/$iName")
 				iPathParent=$(echo "$2/$1")
-				echo "test2 $iPath $iPathParent"
 			fi
-			echo "bonjour"
-			echo "$root$iPath"
 			iContent=$(echo "$currentArchive" | awk -v directory="$root$iPath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-			echo "$iName est un dossier dans $iPathParent"
-			echo -e "$iName contient :\n$iContent"
+
 			if [ -n "$iContent" ]
 			then	
-				echo "boucle"
 				deleteDirectory $iName $iPathParent $iContent $i
 			else
-				echo "$iName est vide, suppression en cours"
-				# Suppression de directory $root$toDeletePath$toDeleteName
-				#(cas où le dossier est à la racine)
-				if (echo "$currentArchive" | egrep "^directory $root$iPath$")
+				# Suppression de la ligne directory $root$toDeletePath$toDeleteName
+				# (cas où le dossier est à la racine)
+				if (echo "$currentArchive" | egrep -q "^directory $root$iPath$")
 				then
 					currentArchive=$(echo "$currentArchive" | sed "s:^directory ${root}${iPath}$::")
-					echo "directory $root$iPath$iName supprimé"
-				#(cas où le dossier n'est pas à la racine)
-				elif (echo "$currentArchive" | egrep "^directory $root$iPath/$iName$")
+				# (cas où le dossier n'est pas à la racine)
+				elif (echo "$currentArchive" | egrep -q "^directory $root$iPath/$iName$")
 				then
-					echo "suppression de : $root$iPath"
 					currentArchive=$(echo "$currentArchive" | sed "s:^directory ${root}${iPath}$::")
-					echo "directory $root$iPath supprimé"
 				fi
-				# Suppression de $toDeleteFile
+				# Suppression de la ligne $toDeleteFile
 				currentArchive=$(echo "$currentArchive" | sed "s/${i}//")
-				echo "$i supprimé"
-				echo "$currentArchive"
+				echo "$iName supprimé"
 			fi
 		else
 			if [ "$2" = "/" ]	
 			then
 				iPath=$(echo "$2$1")
-				echo "test1 $iPath"
 			else
 				iPath=$(echo "$2/$1")
-				echo "test2 $iPath"
 			fi
- 
-			echo "$iName est un fichier dans $iPath"	
+	
 			# On supprime le fichier
 			# Récupération du contenu du fichier
 			iDeleteFile=$(echo "$3" | egrep "^$iName [^d]")
-			echo "$iDeleteFile"
+
 			# Récupération ligne de début du contenu
 			iDeleteBegin=$(echo "$iDeleteFile" | cut -d" " -f4)
-			echo "begin at $iDeleteBegin"
+
 			iDeleteBegin=$((iDeleteBegin+bodyBegin-1))
-			echo "in archive begins at $iDeleteBegin"
+
 			# Récupération longueur
 			iDeleteLength=$(echo "$iDeleteFile" | cut -d" " -f5)
-			echo "$iDeleteLength line(s) long"
+
 			# Calcul ligne de fin
 			iDeleteEnd=$((iDeleteBegin+iDeleteLength-1))
-			echo "end at $iDeleteEnd"
+
 			# Suppression fichier (header)
 			currentArchive=$(echo "$currentArchive" | sed "s/${i}//")
 			# Suppression fichier (body)
@@ -108,29 +83,21 @@ function deleteDirectory() {
 
 	# Suppression de directory $root$toDeletePath
 	#(cas où le dossier est à la racine)
-	echo "Suppression de ^directory $root$2$1$"
-	if (echo "$currentArchive" | egrep "^directory $root$2$1$")
+
+	if (echo "$currentArchive" | egrep -q "^directory $root$2$1$")
 	then
 		currentArchive=$(echo "$currentArchive" | sed "s:^directory $root$2$1$::")
-		echo "suppression de : $root$2$1"
+
 	#(cas où le dossier n'est pas à la racine)
-	elif (echo "$currentArchive" | egrep "^directory $root$2/$1$")
+	elif (echo "$currentArchive" | egrep -q "^directory $root$2/$1$")
 	then
-		echo "suppression de : $root$2/$1"
+
 		currentArchive=$(echo "$currentArchive" | sed "s:^directory ${root}${2}/${1}$::")
 	fi
-	#  
 
 	# Suppression de $toDeleteFile
 	currentArchive=$(echo "$currentArchive" | sed "s:${4}::")
 	echo "$currentArchive"
-
-#dans la fonction :
-#----pour tout le contenu du dossier :
-#--------si dossier, on lance la fonction, le dossier et son contenu est supprimé
-#--------si fichier, on supprime
-#----supprimer le dossier
-#le dossier et son contenu on été supprimé
 	
 }
 
@@ -146,13 +113,14 @@ headBegin=$(echo "$currentArchive" | head -n 1 | cut -d":" -f1)
 # Numéro de ligne de début du body. Pour archive1 par exemple, $bodyBegin a la valeur : 25 
 bodyBegin=$(echo "$currentArchive" | head -n 1 | cut -d":" -f2)
 
+echo "Use pwd, ls, cd, cat and rm as usual"
 echo -n "vsh:> "
 # Tant que l'utilisateur ne quitte pas le programme
 while read input
 do
 	# On change les arguments pour les gérer avec $1 $2 etc.
 	set -- $(echo $input)
-	case $1 in
+	case "$1" in
 
 		# Affiche le dossier courant
 		"pwd" )
@@ -210,6 +178,7 @@ do
 			# FIX : enlever le $ à la fin de la régex
 			# UPDATE : il y a un espace après A/A2 et A/A3
 			# FIX : ajouter " ?$" à la fin de la régex pour gérer la présence d'un possible espace
+			# FIX : suppression des espaces aux endroits où ils n'ont pas lieu d'être
 			if (echo "$currentArchive" | egrep -q "^directory $root$path ?$")
 			then
 				currentDirectory=$(echo "$path")
@@ -218,11 +187,11 @@ do
 			fi
 		# Chemin relatif
 		else
-			# Si cd
+			# Si "cd "
 			if [ -z "$path" ]
 			then
 				currentDirectory=/
-			# Si cd ..
+			# Si "cd .."
 			elif [ "$path" = ".." ]
 			then
 				# Si on est déjà à la racine
@@ -240,7 +209,7 @@ do
 						currentDirectory=$(echo "$currentDirectory" | sed 's/\/$//')
 					fi
 				fi
-			# Si cd Dossier/Dossier1 etc.
+			# Si cd "Dossier/..."
 			else
 				# À cause des "/", on traite différemment la ligne de texte selon que l'on soit sur la racine ou non
 				# Si on est dans la racine
@@ -282,6 +251,7 @@ do
 
 			else
 				echo "No file in argument to prompt"
+			fi
 		;;
 
 		# Supprime un fichier/dossier
@@ -331,15 +301,12 @@ do
 					toDeletePathContent=$(echo "$currentArchive" | awk -v directory="$root$toDeletePath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
 
 					# On vérifie que le chemin est un directory : l'entité est un dossier (cas où le dossier est à la racine)
-					if (echo "$currentArchive" | egrep "^directory $root$toDeletePath$toDeleteName ?$")
+					if (echo "$currentArchive" | egrep -q "^directory $root$toDeletePath$toDeleteName ?$")
 					then
-						echo "Directory found in $toDeletePath"
 						toDeleteFile=$(echo "$toDeletePathContent" | egrep "^$toDeleteName d")
-						echo "Ligne du fichier dans l'archive : $toDeleteFile"
 						toDeleteContent=$(echo "$currentArchive" | awk -v directory="$root$toDeletePath$toDeleteName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-						echo "In this directory :"
-						echo "$toDeleteContent"
-						# On sauvegarde IFS et on le change pour la boucle for
+
+						# On sauvegarde IFS et on le change pour la fonction récurrente
 						oldIFS=$IFS
 						IFS=$'\n'
 						deleteDirectory $toDeleteName "$toDeletePath" "$toDeleteContent" "$toDeleteFile"
@@ -347,15 +314,11 @@ do
 						IFS=$oldIFS
 
 					# On vérifie que le chemin est un directory : l'entité est un dossier (cas où le dossier n'est pas à la racine)
-					elif (echo "$currentArchive" | egrep "^directory $root$toDeletePath/$toDeleteName ?$")
+					elif (echo "$currentArchive" | egrep -q "^directory $root$toDeletePath/$toDeleteName ?$")
 					then
-						echo "Directory found in $toDeletePath"
 						toDeleteFile=$(echo "$toDeletePathContent" | egrep "^$toDeleteName d")
-						echo "Ligne du fichier dans l'archive : $toDeleteFile"
 						toDeleteContent=$(echo "$currentArchive" | awk -v directory="$root$toDeletePath/$toDeleteName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-						echo "In this directory :"
-						echo "$toDeleteContent"
-						# On sauvegarde IFS et on le change pour la boucle for
+						# On sauvegarde IFS et on le change pour la fonction récurrente
 						oldIFS=$IFS
 						IFS=$'\n'
 						deleteDirectory $toDeleteName "$toDeletePath" "$toDeleteContent" "$toDeleteFile"
@@ -363,28 +326,28 @@ do
 						IFS=$oldIFS
 
 					# On vérifie que le nom existe et que les permissions ne commencent pas par d : l'entité est un fichier
-					elif (echo "$toDeletePathContent" | egrep "^$toDeleteName [^d]")
+					elif (echo "$toDeletePathContent" | egrep -q "^$toDeleteName [^d]")
 					then
-						echo "$toDeleteName found"
+
 						# Récupération du contenu du fichier
 						toDeleteFile=$(echo "$currentArchive" | egrep "^$toDeleteName [^d]")
-						echo "in archive $toDeleteFile"
+
 						# Récupération ligne de début du contenu
 						toDeleteBegin=$(echo "$toDeleteFile" | cut -d" " -f4)
-						echo "begin at $toDeleteBegin"
+
 						toDeleteBegin=$((toDeleteBegin+bodyBegin-1))
-						echo "in archive begins at $toDeleteBegin"
+
 						# Récupération longueur
 						toDeleteLength=$(echo "$toDeleteFile" | cut -d" " -f5)
-						echo "$toDeleteLength line(s) long"
+
 						# Calcul ligne de fin
 						toDeleteEnd=$((toDeleteBegin+toDeleteLength-1))
-						echo "end at $toDeleteEnd"
+
 						# Suppression fichier (headder)
 						currentArchive=$(echo "$currentArchive" | sed "s/${toDeleteFile}//")
 						# Suppression fichier (body)
 						currentArchive=$(echo "$currentArchive" | sed "${toDeleteBegin},${toDeleteEnd}s/.*//")
-						echo "File deleted"
+						echo "$toDeleteName deleted"
 						echo "$currentArchive"
 					else
 						echo "No directory or file found"
@@ -392,13 +355,10 @@ do
 				fi
 			# Chemin relatif
 			else
-				echo "Chemin relatif"
-				echo "$currentDirectory"
 				
 				if (echo "$toDelete" | egrep -q "/")
 				# On souhaite supprimer dans un dossier fils
 				then
-					echo "Child directory"
 					# On récupère le chemin de l'entité à supprimer
 					if [ "$currentDirectory" = "/" ]
 					then
@@ -407,91 +367,70 @@ do
 						toDeletePath=$(echo "$currentDirectory/$toDelete" | sed -r 's/(\/[^\/]+)$//')
 					fi
 
-					echo "path = $toDeletePath"
 					# On recupére le nom de l'entité à supprimer
 					toDeleteName=$(echo "$toDelete" | egrep -o "[[:alnum:]]+$")
-					echo "name of file = $toDeleteName"
 
 					# On regarde si le chemin existe
-					if (echo "$currentArchive" | egrep "^directory $root$toDeletePath$")
+					if (echo "$currentArchive" | egrep -q "^directory $root$toDeletePath$")
 					# On regarde si le fichier/dossier est dans le contenu du dossier	
 					then
-						echo "$toDeletePath existe dans $currentDirectory"
 						
 						currentContent=$(echo "$currentArchive" | awk -v directory="$root$toDeletePath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-						echo "Contenu du dossier courant : $currentContent"
 						# On regarde si l'entité existe dans le contenu de ce chemin et est un fichier
-						if (echo "$currentContent" | egrep "^$toDeleteName [^d]")
+						if (echo "$currentContent" | egrep -q "^$toDeleteName [^d]")
 						then
-							echo "$toDeleteName est bien un fichier dans $toDeletePath"
+
 							# On supprime le fichier
 							# Récupération du contenu du fichier
 							toDeleteFile=$(echo "$currentContent" | egrep "^$toDeleteName [^d]")
-							echo "in archive $toDeleteFile"
+
 							# Récupération ligne de début du contenu
 							toDeleteBegin=$(echo "$toDeleteFile" | cut -d" " -f4)
-							echo "begin at $toDeleteBegin"
+
 							toDeleteBegin=$((toDeleteBegin+bodyBegin-1))
-							echo "in archive begins at $toDeleteBegin"
+
 							# Récupération longueur
 							toDeleteLength=$(echo "$toDeleteFile" | cut -d" " -f5)
-							echo "$toDeleteLength line(s) long"
+
 							# Calcul ligne de fin
 							toDeleteEnd=$((toDeleteBegin+toDeleteLength-1))
-							echo "end at $toDeleteEnd"
+
 							# Suppression fichier (header)
 							currentArchive=$(echo "$currentArchive" | sed "s/${toDeleteFile}//")
 							# Suppression fichier (body)
 							currentArchive=$(echo "$currentArchive" | sed "${toDeleteBegin},${toDeleteEnd}s/.*//")
-							echo "File deleted"
+							echo "$toDeleteName deleted"
 							echo  "$currentArchive"
+
 						# On regarde si l'entité existe dans le contenu de ce chemin et est un dossier
 						elif (echo "$currentContent" | egrep -q "^$toDeleteName [d]")
 						then
-							echo "$toDeleteName est bien un dossier dans $toDeletePath"
-						# NOT-OK
+
 						toDeleteContent=$(echo "$currentArchive" | awk -v directory="$root$toDeletePath/$toDeleteName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
 						toDeleteFile=$(echo "$currentContent" | egrep "^$toDeleteName [d]")
 
-						# On sauvegarde IFS et on le change pour la boucle for
+						# On sauvegarde IFS et on le change pour la fonction récurrente
 						oldIFS=$IFS
 						IFS=$'\n'
 						deleteDirectory $toDeleteName "$toDeletePath" "$toDeleteContent" "$toDeleteFile"
 						# Restauration de IFS
 						IFS=$oldIFS
-
 						else
 							echo "No file or directory found there"
 						fi
 					else
 						echo "No such path found"
-						echo "$root$currentDirectory/?$toDeletePath"
 					fi
 
 				# On souhaite supprimer dans le dossier courant
 				else
 					toDeleteName=$(echo "$toDelete" | egrep -o "[[:alnum:]]+$")
-					echo "name of file = $toDeleteName"
 
 					# On liste le contenu du dossier courant
 					currentContent=$(echo "$currentArchive" | awk -v directory="$root$currentDirectory" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-					echo "found in $currentDirectory with these :"
-					echo "$currentContent"
 
-					# On gère le chemin du fichier à supprimer selon qu'on soit à la racine ou non
-					if [ "$currentDirectory" = "/" ]
-					then
-						#toDeletePath=$(echo "$toDelete" | sed -r 's/(\/[^\/]+)$//')
-						toDeletePath="$currentDirectory"
-						echo "Chemin du fichier à supprimer si on est à la racine : $toDeletePath"
-					else
-						# BUG : toDeletePath ne prend pas la valeur lorsque que l'on rajoute le sed
-						# FIX : Faire en deux fois de sorte à ne pas se faire piéger par l'expression linéaire qui renvoie tout ce qu'il y a avant le dernier "/" (donc rien si le seul "/" est le premier caractère)
-						#toDeletePath=$(echo "$toDelete" | sed -r 's/(\/[^\/]+)$//')
-						toDeletePath=$(echo "$currentDirectory")
-						echo "Chemin du fichier à supprimer si on n'est pas à la racine : $toDeletePath"
-					fi
-
+					toDeletePath="$currentDirectory"
+					
 					# On vérifie que l'entité existe et est un dossier
 					if (echo "$currentContent" | egrep -q "^$toDeleteName d")
 					then
@@ -499,11 +438,8 @@ do
 							then							
 								echo "Directory found"
 								toDeleteContent=$(echo "$currentArchive" | awk -v directory="$root$toDeletePath$toDeleteName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-								echo "$root$toDeletePath"
-								echo "In this directory :"
-								echo "$toDeleteContent"
 								toDeleteFile=$(echo "$currentContent" | egrep "$toDeleteName d")
-								# On sauvegarde IFS et on le change pour la boucle for
+								# On sauvegarde IFS et on le change pour la fonction récurrente
 								oldIFS=$IFS
 								IFS=$'\n'
 								deleteDirectory $toDeleteName $toDeletePath "$toDeleteContent" "$toDeleteFile"
@@ -515,9 +451,6 @@ do
 							else
 								echo "Directory found"
 								toDeleteContent=$(echo "$currentArchive" | awk -v directory="$root$toDeletePath/$toDeleteName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-								echo "$root$toDeletePath"
-								echo "In this directory :"
-								echo "$toDeleteContent"
 								toDeleteFile=$(echo "$currentContent" | egrep "$toDeleteName d")
 								# On sauvegarde IFS et on le change pour la boucle for
 								oldIFS=$IFS
@@ -528,29 +461,29 @@ do
 							fi
 
 					# On vérifie que le nom existe dans le dossier courant et que les permissions ne commencent pas par d : l'entité est un fichier
-					elif (echo "$currentContent" | egrep "^$toDeleteName [^d]")
+					elif (echo "$currentContent" | egrep -q "^$toDeleteName [^d]")
 					then
-						echo "$toDelete found"
+
 						# Récupération du contenu du fichier
 						toDeleteFile=$(echo "$currentArchive" | egrep "^$toDeleteName [^d]")
-						echo "in archive $toDeleteFile"
+
 						# Récupération ligne de début du contenu
 						toDeleteBegin=$(echo "$toDeleteFile" | cut -d" " -f4)
-						echo "begin at $toDeleteBegin"
+
 						toDeleteBegin=$((toDeleteBegin+bodyBegin-1))
-						echo "in archive begins at $toDeleteBegin"
+
 						# Récupération longueur
 						toDeleteLength=$(echo "$toDeleteFile" | cut -d" " -f5)
-						echo "$toDeleteLength line(s) long"
+
 						# Calcul ligne de fin
 						toDeleteEnd=$((toDeleteBegin+toDeleteLength-1))
-						echo "end at $toDeleteEnd"
+
 						# Suppression fichier (header)
 						currentArchive=$(echo "$currentArchive" | sed "s/${toDeleteFile}//")
 						# Suppression fichier (body)
 						currentArchive=$(echo "$currentArchive" | sed "${toDeleteBegin},${toDeleteEnd}s/.*//")
-						echo "File deleted"
-						#echo "$currentArchive"
+						echo "$toDeleteName deleted"
+						echo "$currentArchive"
 					else
 						echo "No directory or file found"
 						
