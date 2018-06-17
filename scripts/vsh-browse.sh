@@ -284,7 +284,7 @@ do
 								echo "Number of ligns in body : $flength"
 							fend=$((fdebut+flength-1))
 								echo "End lign in archive body : $fend"
-							echo""
+							echo ""
 
 							# Si la longueur du fichier vaut 0 il n'y a rien à afficher, mais il vaut mieux prévenir le client que cela est normal
 							if [[ $flength -eq 0 ]]
