@@ -397,32 +397,32 @@ do
 										# echo "$currentArchive"
 								else
 									echo "No file found"
+								fi
 						fi
-				fi
 			
-			# Chemin relatif
-			else
-				if (echo "$toPrompt" | egrep -q "/")
-					# On souhaite afficher un fichier dans un dossier fils
-					then
-						# On récupère le chemin de l'entité à afficher
-						if [ "$currentDirectory" = "/" ]
+					# Chemin relatif
+					else
+						if (echo "$toPrompt" | egrep -q "/")
+							# On souhaite afficher un fichier dans un dossier fils
 							then
-								toPromptPath=$(echo "/$toPrompt" | sed -r 's/(\/[^\/]+)$//')
-							else
-								toDeletePath=$(echo "$currentDirectory/$toPrompt" | sed -r 's/(\/[^\/]+)$//')
-						fi
+								# On récupère le chemin de l'entité à afficher
+								if [ "$currentDirectory" = "/" ]
+									then
+										toPromptPath=$(echo "/$toPrompt" | sed -r 's/(\/[^\/]+)$//')
+									else
+										toDeletePath=$(echo "$currentDirectory/$toPrompt" | sed -r 's/(\/[^\/]+)$//')
+								fi
 
-						# On recupére le nom de l'entité à afficher
-						toPromptName=$(echo "$toPrompt" | egrep -o "[[:alnum:]]+$")
+								# On recupére le nom de l'entité à afficher
+								toPromptName=$(echo "$toPrompt" | egrep -o "[[:alnum:]]+$")
 
-						# On regarde si le chemin existe
-						if (echo "$currentArchive" | egrep -q "^directory $root$toPromptPath$")
+								# On regarde si le chemin existe
+								if (echo "$currentArchive" | egrep -q "^directory $root$toPromptPath$")
 							
-							# On regarde si le fichier est dans le contenu du dossier	
-							then
-								currentContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-								# On regarde si l'entité existe dans le contenu de ce chemin et est un fichier
+								# On regarde si le fichier est dans le contenu du dossier	
+								then
+									currentContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+									# On regarde si l'entité existe dans le contenu de ce chemin et est un fichier
 									if (echo "$currentContent" | egrep -q "^$toPromptName [^d]")
 										then
 											catfile
@@ -448,32 +448,34 @@ do
 											# echo "$toDeleteName deleted"
 											# echo  "$currentArchive"
 
-							# On regarde si l'entité existe dans le contenu de ce chemin et est un dossier
-							elif (echo "$currentContent" | egrep -q "^$toDeleteName [d]")
+								# On regarde si l'entité existe dans le contenu de ce chemin et est un dossier
+								elif (echo "$currentContent" | egrep -q "^$toDeleteName [d]")
 
-								then
+									then
 
-									toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toDeletePath/$toDeleteName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-									toPromptFile=$(echo "$currentContent" | egrep "^$toDeleteName [d]")
-									echo "$toPromptName is a directory and cannot be prompt by cat"
+										toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toDeletePath/$toDeleteName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+										toPromptFile=$(echo "$currentContent" | egrep "^$toDeleteName [d]")
+										echo "$toPromptName is a directory and cannot be prompt by cat"
 
-									# # On sauvegarde IFS et on le change pour la fonction récurrente
-									# oldIFS=$IFS
-									# IFS=$'\n'
-									# deleteDirectory $toDeleteName "$toDeletePath" "$toDeleteContent" "$toDeleteFile"
-									# # Restauration de IFS
-									# IFS=$oldIFS
-								else
-									echo "No file or directory found there"
-							fi
-					else
-						echo "No such path found"
+										# # On sauvegarde IFS et on le change pour la fonction récurrente
+										# oldIFS=$IFS
+										# IFS=$'\n'
+										# deleteDirectory $toDeleteName "$toDeletePath" "$toDeleteContent" "$toDeleteFile"
+										# # Restauration de IFS
+										# IFS=$oldIFS
+									else
+										echo "No file or directory found there"
+								fi
 					fi
+			else
+				echo "No such path found"
+			fi
 
 
 			else
 				echo "No file in argument to prompt"
 			fi
+		fi	
 		;;
 
 		# Supprime un fichier/dossier
