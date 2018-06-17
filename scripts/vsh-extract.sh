@@ -3,19 +3,16 @@
 # Les fonctions comme extract sont appelées par le script "server"
 	
 # Ferme le client si l'utilisateur a oublié de mettre l'archive
-#if [ -z $4 ]
-#	then
-#		echo "No archive given"
-#		echo "Usage : vsh -extract [SERVER_NAME] [PORT] [ARCHIVE_NAME]"
-#		exit 1
-#fi
+if [ -z $4 ]
+	then
+		echo "No archive given"
+		echo "Usage : vsh -extract [SERVER_NAME] [PORT] [ARCHIVE_NAME]"
+		exit 1
+fi
 
-# On stocke la position actuelle
-startposition=$(pwd)
-
+echo ""
 # On stocke le répertoire courant pour la future extraction 
 dirextract=$5 
-# dirextract=$startposition pour test sur macOS
 
 # On stocke le chemin absolu vers le dossier tmp
 cd tmp
@@ -26,42 +23,28 @@ cd ../../archives
 dirArchives=$(pwd)
 currentArchive=$(cat $dirArchives/$4)
 
-# OSBSOLETE On se place dans le dossier des scripts
-# cd ../scripts
-
-# À changer par le répertoire du client ?
-# asroot=$(pwd)
-
-echo ""
 # la variable hdebut donne la ligne où commence le header de l'archive
 hdebut=$(echo "$currentArchive" | sed '1q' | cut -d : -f 1) # head -n 1 | cut -d : -f 1)
-echo $hdebut
 # la variable bdebut donne la ligne où commence le body de l'archive
 bdebut=$(echo "$currentArchive" | sed '1q' | cut -d : -f 2) 
-echo $bdebut
 # la variable hend donne la ligne où se termine le header de l'archive
 hend=$(($bdebut-1)) 
 # la variable bend donne la ligne où se termine le body de l'archive
 bend=$(echo "$currentArchive" | sed -n '$=')
-echo $bend
-echo ""
-
-# sed -n "$((hdebut)),$((hend))p" $currentArchive > $dirtmp/header
-# sed -n "$((bdebut)),$((bend))p" $currentArchive > $dirtmp/body
 
 header=$(echo "$currentArchive" | sed -n "$((hdebut)),$((hend))p")
-echo "$header"
 body=$(echo "$currentArchive" | sed -n "$((bdebut)),$((bend))p")
 
-# Fonction principale : on a besoin de lire le header ligne par ligne
+# Dans la fonction principale, on a besoin de lire le header ligne par ligne
 # Avec une boucle for, il faut donc changer temporairement le séparateur de champ
-# Pour que seul soit reconnu le saut de ligne
+# pour que seul soit reconnu le saut de ligne
 
 # Sauvegarde du séparateur de champ
 old_IFS=$IFS 
 # Nouveau séparateur de champ, le caractère fin de ligne
 IFS=$'\n' 
 
+# Fonction principale
 for line in $header
 	do 
 		# Si la ligne commence par "directory", on va créer l'arborescence qui est détaillée dans la suite de la ligne
@@ -80,8 +63,6 @@ for line in $header
 						# Il faut se placer dans le niveau d'aborescence créé pour pouvoir ensuite créer les fichiers et répertoires du niveau
 						cd $dirextract/$arborescence 
 				fi
-
-		# elif [[ "$line" =~ ^\w+\sd ]] # Cette version ne marche pas à cause de la gestion des regex par défaut de bash
 		
 		# Si la ligne contient nom_dossier/espace/d => décrit un répertoire (permissions + taille)
 		elif [[ $(echo "$line" | egrep "^\w+\sd") ]]  
@@ -159,6 +140,8 @@ for line in $header
 						echo "The file $namef already exist" 
 				fi
 
+		# Les lignes "@" de l'archive servent de marqueur pour revenir au début de l'arborescence
+		# et garantir le fonctionnement des actions sur les lignes correspondant aux arborescences
 		elif [[ "$line" =~ ^@ ]]
 			then
 				cd $dirextract
@@ -167,25 +150,13 @@ for line in $header
 				echo $(pwd)
 				echo ""
 
+		# Message d'erreur
 		else
 			echo ""
-			echo "Regex failure" 
+			echo "Error. There is a problem in archive format. Unable to read." 
 			echo ""
 		fi
 	done
 
-IFS=$old_IFS # rétablissement du séparateur de champ par défaut
-
-############################################################ 
-
-# tentative première, créée l'abrorescence des dossiers mais c'est tout
-
-	# awk '/^directory/ {print $2}' $input > ../scripts/tmp/tmp-extract # $input sera normalement remplacé par $4, provenant de la commande vsh -extract [serveur] [port] [archive]
-	# #cat ../scripts/tmp/tmp-extract # Pour vérifier que le fichier tmp-extract contient bien ce que l'on veut
-	# while read line
-	# 	do
-	#  		mkdir -p $line # crée l'arborescence de dossiers
-	#  	done < ../scripts/tmp/tmp-extract
-	# rm ../scripts/tmp/tmp-extract
-
-############################################################
+# rétablissement du séparateur de champ par défaut
+IFS=$old_IFS 
