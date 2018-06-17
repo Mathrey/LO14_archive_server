@@ -325,84 +325,83 @@ do
 					then
 						# Si l'entrée est la racine
 						if [ "$toPrompt" = "/" ]
+							then
 							echo "The root directory is not a file"
+							else
+								# On récupère le chemin du fichier à afficher (-o ne print que les matchs) sous la forme A/A1 ou A
+								toPromptPath=$(echo "$toPrompt" | egrep -o ".*/")
+								echo "The variable toPromptPath : $toPromptPath" 
+								if [ $toPromptPath != "/" ]
+									then
+										toPromptPath=$(echo "$toPromptPath" | sed "s/\/$//")
+										echo "The new variable toPromptPath : $toPromptPath"
+								fi 
 
-					else
-						# On récupère le chemin du fichier à afficher (-o ne print que les matchs) sous la forme A/A1 ou A
-						toPromptPath=$(echo "$toPrompt" | egrep -o ".*/")
-						echo "The variable toPromptPath : $toPromptPath" 
-						if [ $toPromptPath != "/" ]
-							then
-								toPromptPath=$(echo "$toPromptPath" | sed "s/\/$//")
-								echo "The new variable toPromptPath : $toPromptPath"
-						fi 
-
-						# On recupére le nom de l'entité à afficher
-						toPromptName=$(echo "$toPrompt" | egrep -o "[[:alnum:]]+$")
-						echo "The variable toPromptName : $toPromptName"
-						# On récupère le contenu du chemin de l'entité
-						toPromptPathContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-						echo "The variable toPromptPathContent : $toPromptPathContent"
+								# On recupére le nom de l'entité à afficher
+								toPromptName=$(echo "$toPrompt" | egrep -o "[[:alnum:]]+$")
+								echo "The variable toPromptName : $toPromptName"
+								# On récupère le contenu du chemin de l'entité
+								toPromptPathContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+								echo "The variable toPromptPathContent : $toPromptPathContent"
 						
-						# On vérifie que le chemin est un directory : l'entité est un dossier (cas où le dossier est à la racine)
-						if (echo "$currentArchive" | egrep -q "^directory $root$toPromptPath$toPromptName ?$")
-							then
-								toPromptFile=$(echo "$toPromptPathContent" | egrep "^$toPromptName d")
-								toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath$toPromptName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-								echo "$toPromptName is a directory and cannot be prompt by cat"
-								# On sauvegarde IFS et on le change pour la fonction récurrente
-								# oldIFS=$IFS
-								# IFS=$'\n'
-								# deleteDirectory $toDeleteName "$toPromptPath" "$toPromptContent" "$toPromptFile"
-								# Restauration de IFS
-								# IFS=$oldIFS
+								# On vérifie que le chemin est un directory : l'entité est un dossier (cas où le dossier est à la racine)
+								if (echo "$currentArchive" | egrep -q "^directory $root$toPromptPath$toPromptName ?$")
+									then
+										toPromptFile=$(echo "$toPromptPathContent" | egrep "^$toPromptName d")
+										toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath$toPromptName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+										echo "$toPromptName is a directory and cannot be prompt by cat"
+										# On sauvegarde IFS et on le change pour la fonction récurrente
+										# oldIFS=$IFS
+										# IFS=$'\n'
+										# deleteDirectory $toDeleteName "$toPromptPath" "$toPromptContent" "$toPromptFile"
+										# Restauration de IFS
+										# IFS=$oldIFS
 
-						# On vérifie que le chemin est un directory : l'entité est un dossier (cas où le dossier n'est pas à la racine)
-						elif (echo "$currentArchive" | egrep -q "^directory $root$toPromptPath/$toPromptName ?$")
-							then
-								toPromptFile=$(echo "$toPromptPathContent" | egrep "^$toPromptName d")
-								toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath/$toPromptName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-								echo "$toPromptName is a directory and cannot be prompt by cat"
+								# On vérifie que le chemin est un directory : l'entité est un dossier (cas où le dossier n'est pas à la racine)
+								elif (echo "$currentArchive" | egrep -q "^directory $root$toPromptPath/$toPromptName ?$")
+									then
+										toPromptFile=$(echo "$toPromptPathContent" | egrep "^$toPromptName d")
+										toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath/$toPromptName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+										echo "$toPromptName is a directory and cannot be prompt by cat"
 
-								# On sauvegarde IFS et on le change pour la fonction récurrente
-								# oldIFS=$IFS
-								# IFS=$'\n'
-								# deleteDirectory $toPromptName "$toPromptPath" "$toPromptContent" "$toPromptFile"
-								# Restauration de IFS
-								# IFS=$oldIFS
+										# On sauvegarde IFS et on le change pour la fonction récurrente
+										# oldIFS=$IFS
+										# IFS=$'\n'
+										# deleteDirectory $toPromptName "$toPromptPath" "$toPromptContent" "$toPromptFile"
+										# Restauration de IFS
+										# IFS=$oldIFS
 
-						# On vérifie que le nom existe et que les permissions ne commencent pas par d : l'entité est un fichier
-						elif (echo "$toPromptPathContent" | egrep -q "^$toPromptName [^d]")
-							then
-								catfile
-								# Récupération du contenu du fichier
-								# toPromptFile=$(echo "$currentArchive" | egrep "^$toPromptName [^d]")
+								# On vérifie que le nom existe et que les permissions ne commencent pas par d : l'entité est un fichier
+								elif (echo "$toPromptPathContent" | egrep -q "^$toPromptName [^d]")
+									then
+										catfile
+										# Récupération du contenu du fichier
+										# toPromptFile=$(echo "$currentArchive" | egrep "^$toPromptName [^d]")
 
-								# Récupération ligne de début du contenu
-								# toPromptBegin=$(echo "$toPromptFile" | cut -d" " -f4)
+										# Récupération ligne de début du contenu
+										# toPromptBegin=$(echo "$toPromptFile" | cut -d" " -f4)
 
-								# toPromptBegin=$((toPromptBegin+bodyBegin-1))
+										# toPromptBegin=$((toPromptBegin+bodyBegin-1))
 
-								# Récupération longueur
-								# toPromptLength=$(echo "$toPromptFile" | cut -d" " -f5)
+										# Récupération longueur
+										# toPromptLength=$(echo "$toPromptFile" | cut -d" " -f5)
 
-								# Calcul ligne de fin
-								# toPromptEnd=$((toPromptBegin+toPromptLength-1))
+										# Calcul ligne de fin
+										# toPromptEnd=$((toPromptBegin+toPromptLength-1))
 
-								# Suppression fichier (headder)
-								# currentArchive=$(echo "$currentArchive" | sed "s/${toPromptFile}//")
-								# Suppression fichier (body)
-								#currentArchive=$(echo "$currentArchive" | sed "${toPromptBegin},${toPromptEnd}s/.*//")
-								# echo "$toPromptName contains :"
-								# echo "$currentArchive"
-						else
-							echo "No file found"
+										# Suppression fichier (headder)
+										# currentArchive=$(echo "$currentArchive" | sed "s/${toPromptFile}//")
+										# Suppression fichier (body)
+										#currentArchive=$(echo "$currentArchive" | sed "${toPromptBegin},${toPromptEnd}s/.*//")
+										# echo "$toPromptName contains :"
+										# echo "$currentArchive"
+								else
+									echo "No file found"
 						fi
 				fi
 			
 			# Chemin relatif
 			else
-				
 				if (echo "$toPrompt" | egrep -q "/")
 					# On souhaite afficher un fichier dans un dossier fils
 					then
