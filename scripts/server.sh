@@ -63,6 +63,7 @@ function vsh() {
 if (test $# -eq 1) && (echo $1 | grep -E -q "^[0-9]+$")
 then
 	echo -e "\nit works !\n"
+	echo -e "Archives should be in this directory :\n../archives\nin a text format\n"
 else
 	usage
 fi
