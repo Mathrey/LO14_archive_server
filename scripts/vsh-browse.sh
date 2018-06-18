@@ -385,7 +385,7 @@ do
 
 										# On regarde si l'entité existe dans le contenu de ce chemin et est un dossier
 										elif (echo "$currentContent" | egrep -q "^$toPromptName [d]")
-											then)
+											then
 												echo "$toPromptName is a directory and cannot be prompt by cat"
 										else
 											echo "No file or directory found there"
