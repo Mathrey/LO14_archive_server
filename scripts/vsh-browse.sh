@@ -410,7 +410,7 @@ do
 									then
 										toPromptPath=$(echo "/$toPrompt" | sed -r 's/(\/[^\/]+)$//')
 									else
-										toDeletePath=$(echo "$currentDirectory/$toPrompt" | sed -r 's/(\/[^\/]+)$//')
+										toPromptPath=$(echo "$currentDirectory/$toPrompt" | sed -r 's/(\/[^\/]+)$//')
 								fi
 
 								# On recupére le nom de l'entité à afficher
@@ -467,7 +467,7 @@ do
 										fi
 							
 								fi
-							# On souhaite supprimer dans le dossier courant
+							# On souhaite afficher dans le dossier courant
 							else
 								toPromptName=$(echo "$toPrompt" | egrep -o "[[:alnum:]]+$")
 
