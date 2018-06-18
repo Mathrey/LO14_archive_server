@@ -1,45 +1,35 @@
-3:25
+3:21
 
-directory Exemple/Test/
-A drwxr-xr-x 4096
-B drwxr-xr-x 4096
-toto1 -rwxr-xr-x 29 1 3
-toto2 -rw-r--r-- 249 4 10 
+directory Pokemon/Kanto/
+Pokedex drwxr-xr-x 4096
+Pokeballs drwxr-xr-x 4096
+Bulb -rw-r--r-- 14 1 3
 @
-directory Exemple/Test/A
-A1 drwxr-xr-x 4096
-A2 drwxr-xr-x 4096
-A3 drwxr-xr-x 4096
-toto3 -rw-r--r-- 121 14 3 
+directory Pokemon/Kanto/Pokedex
+Char -rw-r--r-- 15 4 3
+Squi -rw-r--r-- 13 7 3
 @
-directory Exemple/Test/A/A1
-toto4 -rw-r--r-- 0 17 0
+directory Pokemon/Kanto/Pokeballs
+Pokemaster drwxr-xr-x 4096
+Pika -rw-r--r-- 28 10 1
+Spea -rw-r--r-- 28 11 1
+Butt -rw-r--r-- 28 12 1
 @
-directory Exemple/Test/A/A2
+directory Pokemon/Kanto/Pokeballs/Pokemaster
+Ash -rwx-r-xr-x 42 13 3
 @
-directory Exemple/Test/A/A3
-@
-directory Exemple/Test/B
-bar -rw-r--r-- 202 17 6
-@
+GO BULBASAUR
+
+
+GO CHARMANDER
+
+
+GO SQUIRTLE
+
+
+GO PIKACHU
+GO SPEAROW
+GO BUTTERFREE
 #!/bin/bash
 
-echo "bonjour!" 
-NAME
-  ls - list directory contents
-  
-SYNOPSIS
-  ls [OPTION]... [FILE]...
-
-DESCRIPTION
-  List information about the FILEs. 
-DESCRIPTION
-  man formats and displays the on-line manual pages. 
-NAME
-  cat - concatenate files and print on the standard output
-
-SYNOPSIS
-  cat [OPTION] [FILE]...
-
-DESCRIPTION
-  Concatenate FILE(s), or standard input, to standard out- put.
+echo "These are my Pokemons!"

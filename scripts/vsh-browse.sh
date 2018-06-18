@@ -336,15 +336,11 @@ do
 								# On vérifie que le chemin est un directory : l'entité est un dossier (cas où le dossier est à la racine)
 								if (echo "$currentArchive" | egrep -q "^directory $root$toPromptPath$toPromptName ?$")
 									then
-										#toPromptFile=$(echo "$toPromptPathContent" | egrep "^$toPromptName d")
-										#toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath$toPromptName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
 										echo "$toPromptName is a directory and cannot be prompt by cat"
 
 								# On vérifie que le chemin est un directory : l'entité est un dossier (cas où le dossier n'est pas à la racine)
 								elif (echo "$currentArchive" | egrep -q "^directory $root$toPromptPath/$toPromptName ?$")
 									then
-										#toPromptFile=$(echo "$toPromptPathContent" | egrep "^$toPromptName d")
-										#toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath/$toPromptName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
 										echo "$toPromptName is a directory and cannot be prompt by cat"
 
 								# On vérifie que le nom existe et que les permissions ne commencent pas par d : l'entité est un fichier
