@@ -136,14 +136,9 @@ if [[ $(echo "$header" | egrep "^${toPromptName}\s[^d]") ]]
 						echo ""
 						# On va affecter à des variables le nom et l'emplacement du contenu du fichier  :
 						namef=$(echo "$line" | cut -d " " -f 1) 
-							echo "Processing file $namef"
 						fdebut=$(echo "$line" | cut -d " " -f 4)
-							echo "Debut lign in archive body : $fdebut"
 						flength=$(echo "$line" | cut -d " " -f 5)
-							echo "Number of ligns in body : $flength"
 						fend=$((fdebut+flength-1))
-							echo "End lign in archive body : $fend"
-						echo ""
 
 						# Si la longueur du fichier vaut 0 il n'y a rien à afficher, mais il vaut mieux prévenir le client que cela est normal
 						if [[ $flength -eq 0 ]]
@@ -309,7 +304,6 @@ do
 		"cat" )
 
 		toPrompt=$2
-		echo $toPrompt
 
 		if [[ -n "$toPrompt" ]]
 			then
@@ -317,7 +311,6 @@ do
 				if (echo "$toPrompt" | egrep -q ".+/$")
 					then
 						toPrompt=$(echo "$toPrompt" | sed 's/.$//')
-						echo "The variable toPrompt : $toPrompt"
 	       		fi
 
 	       		# Chemin absolu
@@ -330,71 +323,34 @@ do
 							else
 								# On récupère le chemin du fichier à afficher (-o ne print que les matchs) sous la forme A/A1 ou A
 								toPromptPath=$(echo "$toPrompt" | egrep -o ".*/")
-								echo "The variable toPromptPath : $toPromptPath" 
 								if [ $toPromptPath != "/" ]
 									then
 										toPromptPath=$(echo "$toPromptPath" | sed "s/\/$//")
-										echo "The new variable toPromptPath : $toPromptPath"
 								fi 
 
 								# On recupére le nom de l'entité à afficher
 								toPromptName=$(echo "$toPrompt" | egrep -o "[[:alnum:]]+$")
-								echo "The variable toPromptName : $toPromptName"
 								# On récupère le contenu du chemin de l'entité
 								toPromptPathContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-								echo "The variable toPromptPathContent : $toPromptPathContent"
 						
 								# On vérifie que le chemin est un directory : l'entité est un dossier (cas où le dossier est à la racine)
 								if (echo "$currentArchive" | egrep -q "^directory $root$toPromptPath$toPromptName ?$")
 									then
-										toPromptFile=$(echo "$toPromptPathContent" | egrep "^$toPromptName d")
-										toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath$toPromptName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+										#toPromptFile=$(echo "$toPromptPathContent" | egrep "^$toPromptName d")
+										#toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath$toPromptName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
 										echo "$toPromptName is a directory and cannot be prompt by cat"
-										# On sauvegarde IFS et on le change pour la fonction récurrente
-										# oldIFS=$IFS
-										# IFS=$'\n'
-										# deleteDirectory $toDeleteName "$toPromptPath" "$toPromptContent" "$toPromptFile"
-										# Restauration de IFS
-										# IFS=$oldIFS
 
 								# On vérifie que le chemin est un directory : l'entité est un dossier (cas où le dossier n'est pas à la racine)
 								elif (echo "$currentArchive" | egrep -q "^directory $root$toPromptPath/$toPromptName ?$")
 									then
-										toPromptFile=$(echo "$toPromptPathContent" | egrep "^$toPromptName d")
-										toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath/$toPromptName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
+										#toPromptFile=$(echo "$toPromptPathContent" | egrep "^$toPromptName d")
+										#toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath/$toPromptName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
 										echo "$toPromptName is a directory and cannot be prompt by cat"
-
-										# On sauvegarde IFS et on le change pour la fonction récurrente
-										# oldIFS=$IFS
-										# IFS=$'\n'
-										# deleteDirectory $toPromptName "$toPromptPath" "$toPromptContent" "$toPromptFile"
-										# Restauration de IFS
-										# IFS=$oldIFS
 
 								# On vérifie que le nom existe et que les permissions ne commencent pas par d : l'entité est un fichier
 								elif (echo "$toPromptPathContent" | egrep -q "^$toPromptName [^d]")
 									then
 										catfile
-										# Récupération du contenu du fichier
-										# toPromptFile=$(echo "$currentArchive" | egrep "^$toPromptName [^d]")
-
-										# Récupération ligne de début du contenu
-										# toPromptBegin=$(echo "$toPromptFile" | cut -d" " -f4)
-
-										# toPromptBegin=$((toPromptBegin+bodyBegin-1))
-
-										# Récupération longueur
-										# toPromptLength=$(echo "$toPromptFile" | cut -d" " -f5)
-
-										# Calcul ligne de fin
-										# toPromptEnd=$((toPromptBegin+toPromptLength-1))
-
-										# Suppression fichier (headder)
-										# currentArchive=$(echo "$currentArchive" | sed "s/${toPromptFile}//")
-										# Suppression fichier (body)
-										#currentArchive=$(echo "$currentArchive" | sed "${toPromptBegin},${toPromptEnd}s/.*//")
-										# echo "$toPromptName contains :"
-										# echo "$currentArchive"
 								else
 									echo "No file found"
 								fi
@@ -426,42 +382,11 @@ do
 										if (echo "$currentContent" | egrep -q "^$toPromptName [^d]")
 											then
 												catfile
-												# # On supprime le fichier
-												# # Récupération du contenu du fichier
-												# toDeleteFile=$(echo "$currentContent" | egrep "^$toDeleteName [^d]")
-
-												# # Récupération ligne de début du contenu
-												# toDeleteBegin=$(echo "$toDeleteFile" | cut -d" " -f4)
-
-												# toDeleteBegin=$((toDeleteBegin+bodyBegin-1))
-
-												# # Récupération longueur
-												# toDeleteLength=$(echo "$toDeleteFile" | cut -d" " -f5)
-
-												# # Calcul ligne de fin
-												# toDeleteEnd=$((toDeleteBegin+toDeleteLength-1))
-
-												# # Suppression fichier (header)
-												# currentArchive=$(echo "$currentArchive" | sed "s/${toDeleteFile}//")
-												# # Suppression fichier (body)
-												# currentArchive=$(echo "$currentArchive" | sed "${toDeleteBegin},${toDeleteEnd}s/.*//")
-												# echo "$toDeleteName deleted"
-												# echo  "$currentArchive"
 
 										# On regarde si l'entité existe dans le contenu de ce chemin et est un dossier
 										elif (echo "$currentContent" | egrep -q "^$toPromptName [d]")
-											then
-
-												# toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath/$toPromptName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-												# toPromptFile=$(echo "$currentContent" | egrep "^$toPromptName [d]")
+											then)
 												echo "$toPromptName is a directory and cannot be prompt by cat"
-
-												# # On sauvegarde IFS et on le change pour la fonction récurrente
-												# oldIFS=$IFS
-												# IFS=$'\n'
-												# deleteDirectory $toDeleteName "$toDeletePath" "$toDeleteContent" "$toDeleteFile"
-												# # Restauration de IFS
-												# IFS=$oldIFS
 										else
 											echo "No file or directory found there"
 										fi
@@ -470,10 +395,8 @@ do
 							# On souhaite afficher dans le dossier courant
 							else
 								toPromptName=$(echo "$toPrompt" | egrep -o "[[:alnum:]]+$")
-
 								# On liste le contenu du dossier courant
 								currentContent=$(echo "$currentArchive" | awk -v directory="$root$currentDirectory" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-
 								toPromptPath="$currentDirectory"
 								
 								# On vérifie que l'entité existe et est un dossier
@@ -482,28 +405,8 @@ do
 										if [ $currentDirectory = "/" ]
 										then							
 											echo "$toPromptName is a directory and cannot be prompt by cat"
-											# echo "Directory found"
-											# toPromptContent=$(echo "$currentArchive" | awk -v directory="$root$toPromptPath$toPromptName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-											# toPromptFile=$(echo "$currentContent" | egrep "$toPromptName d")
-											# # On sauvegarde IFS et on le change pour la fonction récurrente
-											# oldIFS=$IFS
-											# IFS=$'\n'
-											# deleteDirectory $toDeleteName $toDeletePath "$toDeleteContent" "$toDeleteFile"
-											# # Restauration de IFS
-											# IFS=$oldIFS
-
-										# BUG : ne liste pas le bon contenu du dossier à supprimer lorsque l'on n'est pas à la racine (liste le dossier courant à la place)
-										# FIX : gérer le cas où l'on est à la racine pour la variable $toDeletePath
 										else
 											echo "$toPromptName is a directory and cannot be prompt by cat"
-											# toDeleteContent=$(echo "$currentArchive" | awk -v directory="$root$toDeletePath/$toDeleteName" '$0~directory"$"{flag=1;next}/@/{flag=0}flag')
-											# toDeleteFile=$(echo "$currentContent" | egrep "$toDeleteName d")
-											# # On sauvegarde IFS et on le change pour la boucle for
-											# oldIFS=$IFS
-											# IFS=$'\n'
-											# deleteDirectory $toDeleteName $toDeletePath "$toDeleteContent" "$toDeleteFile"
-											# # Restauration de IFS
-											# IFS=$oldIFS
 										fi
 
 								# On vérifie que le nom existe dans le dossier courant et que les permissions ne commencent pas par d : l'entité est un fichier
